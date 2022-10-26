@@ -59,8 +59,6 @@ namespace OpenGLEngine
             1, 2, 3
         };
 
-        private int vertexArrayObject;
-
         private VertexArray vertexArray;
         private VertexBuffer vertexBuffer;
         private IndexBuffer indexBuffer;
@@ -110,7 +108,7 @@ namespace OpenGLEngine
             shader = new Shader(
                 "src/shaders/shader.vert",
                 "src/shaders/shader.frag");
-            shader.Use();
+            shader.Bind();
             shader.SetInt("texture0", 0);
             shader.SetInt("texture1", 1);
 
@@ -128,13 +126,12 @@ namespace OpenGLEngine
             vertexBuffer.UnBind();
             indexBuffer.UnBind();
             vertexArray.UnBind();
-            GL.UseProgram(0);
+            shader.Unbind();
 
             // Delete all the resources.
             vertexBuffer.Dispose();
             indexBuffer.Dispose();
             vertexArray.Dispose();
-
             shader.Dispose();
         }
 
@@ -149,7 +146,7 @@ namespace OpenGLEngine
 
             texture.Use(TextureUnit.Texture0);
             texture2.Use(TextureUnit.Texture1);
-            shader.Use();
+            shader.Bind();
 
             // Determines the position of the model in the world.
             var model = Matrix4.CreateRotationX((float) MathHelper.DegreesToRadians(time));

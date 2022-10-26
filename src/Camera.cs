@@ -46,7 +46,6 @@ namespace OpenGLEngine
 
         public Vector3 Right => right;
 
-
         // Convert from degrees to radians as soon as the property is set to improve performance.
         public float Pitch
         {

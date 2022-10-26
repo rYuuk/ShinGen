@@ -6,50 +6,33 @@ namespace OpenGLEngine
 {
     public class Shader : IDisposable
     {
-        public int Handle;
+        private int rendererID;
         private bool disposedValue;
 
         public Shader(string vertexPath, string fragmentPath)
         {
-            var vertexShaderSource = File.ReadAllText(vertexPath);
-            var fragmentShaderSource = File.ReadAllText(fragmentPath);
-
-            var vertexShader = GL.CreateShader(ShaderType.VertexShader);
-            GL.ShaderSource(vertexShader, vertexShaderSource);
-
-            var fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
-            GL.ShaderSource(fragmentShader, fragmentShaderSource);
-
-            CompileShader(vertexShader);
-            CompileShader(fragmentShader);
-
-            Handle = GL.CreateProgram();
-
-            GL.AttachShader(Handle, vertexShader);
-            GL.AttachShader(Handle, fragmentShader);
-
-            GL.LinkProgram(Handle);
-            GL.GetProgram(Handle, GetProgramParameterName.LinkStatus, out var success);
-            if (success == 0)
-            {
-                var infoLog = GL.GetShaderInfoLog(Handle);
-                Console.WriteLine(infoLog);
-            }
-
-            GL.DetachShader(Handle, vertexShader);
-            GL.DetachShader(Handle, fragmentShader);
-            GL.DeleteShader(fragmentShader);
-            GL.DeleteShader(vertexShader);
+            var vertexShader = Compile(ShaderType.VertexShader, vertexPath);
+            var fragmentShader = Compile(ShaderType.FragmentShader, fragmentPath);
+            Create(vertexShader, fragmentShader);
         }
 
-        public void Use()
+        public void Bind()
         {
-            GL.UseProgram(Handle);
+            GL.UseProgram(rendererID);
+        }
+
+        public void Unbind()
+        {
+            GL.UseProgram(0);
         }
 
         public void Dispose()
         {
-            Dispose(true);
+            if (!disposedValue)
+            {
+                GL.DeleteProgram(rendererID);
+                disposedValue = true;
+            }
             GC.SuppressFinalize(this);
         }
 
@@ -58,42 +41,60 @@ namespace OpenGLEngine
         // and use this in VertexAttribPointer instead of the hardcoded values.
         public int GetAttribLocation(string attribName)
         {
-            return GL.GetAttribLocation(Handle, attribName);
+            return GL.GetAttribLocation(rendererID, attribName);
         }
 
         public void SetInt(string name, int value)
         {
-            var location = GL.GetUniformLocation(Handle, name);
+            var location = GL.GetUniformLocation(rendererID, name);
             GL.Uniform1(location, value);
         }
 
         public void SetMatrix4(string name, Matrix4 matrix)
         {
-            var location = GL.GetUniformLocation(Handle, name);
+            var location = GL.GetUniformLocation(rendererID, name);
             // Transpose determines whether or not the matrices should be transposed.
             // Since OpenTK uses row-major, whereas GLSL typically uses column-major,
             // we will almost always want to use true here.
             GL.UniformMatrix4(location, true, ref matrix);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private int Compile(ShaderType type,string filePath)
         {
-            if (!disposedValue)
-            {
-                GL.DeleteProgram(Handle);
-                disposedValue = true;
-            }
+            var shaderSource = File.ReadAllText(filePath);
+            var shader = GL.CreateShader(type);
+            GL.ShaderSource(shader, shaderSource);
+            
+            GL.CompileShader(shader);
+            GL.GetShader(shader, ShaderParameter.CompileStatus, out var code);
+            if (code == (int) All.True) 
+                return shader;
+            
+            // Compile failed, get information about the error.
+            var infoLog = GL.GetShaderInfoLog(shader);
+            GL.DeleteShader(shader);
+            throw new Exception($"Error occurred whilst compiling Shader({shader}).\n\n{infoLog}");
         }
 
-        private void CompileShader(int shaderHandle)
+        private void Create(int vertexShader, int fragmentShader)
         {
-            GL.CompileShader(shaderHandle);
-            GL.GetShader(shaderHandle, ShaderParameter.CompileStatus, out var success);
+            rendererID = GL.CreateProgram();
+
+            GL.AttachShader(rendererID, vertexShader);
+            GL.AttachShader(rendererID, fragmentShader);
+
+            GL.LinkProgram(rendererID);
+            GL.GetProgram(rendererID, GetProgramParameterName.LinkStatus, out var success);
             if (success == 0)
             {
-                var infoLog = GL.GetShaderInfoLog(shaderHandle);
+                var infoLog = GL.GetShaderInfoLog(rendererID);
                 Console.WriteLine(infoLog);
             }
+            
+            GL.DetachShader(rendererID, vertexShader);
+            GL.DetachShader(rendererID, fragmentShader);
+            GL.DeleteShader(fragmentShader);
+            GL.DeleteShader(vertexShader);
         }
     }
 }
