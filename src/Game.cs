@@ -67,6 +67,7 @@ namespace OpenGLEngine
         private Texture texture2;
         private double time;
 
+        private Input input;
         // Instance of the camera class to manage the view and projection matrix code.
         private Camera camera;
         // A boolean set to true to detect whether or not the mouse has been moved for the first time.
@@ -117,6 +118,8 @@ namespace OpenGLEngine
 
             // To make the mouse cursor invisible and captured so to have proper FPS-camera movement.
             CursorState = CursorState.Grabbed;
+
+            input = new Input();
         }
 
         protected override void OnUnload()
@@ -168,68 +171,7 @@ namespace OpenGLEngine
                 return;
             }
 
-            KeyboardState? input = KeyboardState;
-
-            if (input.IsKeyDown(Keys.Escape))
-            {
-                Close();
-            }
-
-            if (input.IsKeyDown(Keys.W))
-            {
-                camera.Position += camera.Front * camera.Speed * (float) e.Time; // Forward
-            }
-
-            if (input.IsKeyDown(Keys.S))
-            {
-                camera.Position -= camera.Front * camera.Speed * (float) e.Time; // Backwards
-            }
-            if (input.IsKeyDown(Keys.A))
-            {
-                camera.Position -= camera.Right * camera.Speed * (float) e.Time; // Left
-            }
-            if (input.IsKeyDown(Keys.D))
-            {
-                camera.Position += camera.Right * camera.Speed * (float) e.Time; // Right
-            }
-            if (input.IsKeyDown(Keys.Space))
-            {
-                camera.Position += camera.Up * camera.Speed * (float) e.Time; // Up
-            }
-            if (input.IsKeyDown(Keys.LeftShift))
-            {
-                camera.Position -= camera.Up * camera.Speed * (float) e.Time; // Down
-            }
-
-            if (input.IsKeyDown(Keys.Space))
-            {
-                camera.Position += camera.Up * camera.Speed * (float) e.Time;
-            }
-
-            if (input.IsKeyDown(Keys.LeftShift))
-            {
-                camera.Position -= camera.Up * camera.Speed * (float) e.Time;
-            }
-
-            // Get the mouse state
-            MouseState? mouse = MouseState;
-
-            if (firstMove)
-            {
-                lastPos = new Vector2(mouse.X, mouse.Y);
-                firstMove = false;
-            }
-            else
-            {
-                var deltaX = mouse.X - lastPos.X;
-                var deltaY = mouse.Y - lastPos.Y;
-                lastPos = new Vector2(mouse.X, mouse.Y);
-
-                // Apply the camera pitch and yaw (we clamp the pitch in the camera class)
-                camera.Yaw += deltaX * camera.Sensitivity;
-                // Reversed since y-coordinates range from bottom to top
-                camera.Pitch -= deltaY * camera.Sensitivity;
-            }
+            input.Update(ref camera, KeyboardState, (float) e.Time, MouseState, Close);
         }
 
         // This manage all the zooming of the camera.
