@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 using GL = OpenTK.Graphics.OpenGL4.GL;
 
 namespace OpenGLEngine
@@ -44,7 +45,7 @@ namespace OpenGLEngine
         ~Shader() =>
             GL.DeleteProgram(Handle);
 
-        public void Use()  =>
+        public void Use() =>
             GL.UseProgram(Handle);
 
         public void Dispose()
@@ -63,6 +64,15 @@ namespace OpenGLEngine
         {
             var location = GL.GetUniformLocation(Handle, name);
             GL.Uniform1(location, value);
+        }
+
+        public void SetMatrix4(string name, Matrix4 matrix)
+        {
+            var location = GL.GetUniformLocation(Handle, name);
+            // Transpose determines whether or not the matrices should be transposed.
+            // Since OpenTK uses row-major, whereas GLSL typically uses column-major,
+            // we will almost always want to use true here.
+            GL.UniformMatrix4(location, true, ref matrix);
         }
 
         protected virtual void Dispose(bool disposing)

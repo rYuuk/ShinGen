@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -87,6 +88,12 @@ namespace OpenGLEngine
             shader.Use();
             shader.SetInt("texture0", 0);
             shader.SetInt("texture1", 1);
+            
+            var rotation = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(90.0f));
+            var scale = Matrix4.CreateScale(0.5f, 0.5f, 0.5f);
+            Matrix4 trans = rotation * scale;
+            
+            shader.SetMatrix4("transform", trans);
         }
 
         protected override void OnUnload()
