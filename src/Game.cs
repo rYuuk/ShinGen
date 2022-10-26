@@ -10,11 +10,47 @@ namespace OpenGLEngine
     {
         private readonly float[] vertices =
         {
-            //Position          Texture coordinates
-            0.5f, 0.5f, 0.0f, 1.0f, 1.0f, // top right
-            0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
-            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
-            -0.5f, 0.5f, 0.0f, 0.0f, 1.0f // top left
+            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+            0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+
+            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+            0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+            0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+            -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
+            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+
+            -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+            -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+            -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+
+            0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+            0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+            0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+
+            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
+            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+
+            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+            0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+            0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+            -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
+            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f
         };
 
         private readonly uint[] indices =
@@ -34,6 +70,7 @@ namespace OpenGLEngine
         private Matrix4 view;
         private Matrix4 projection;
 
+        private double time;
 
         public Game(int width, int height, string title) :
             base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title })
@@ -95,7 +132,7 @@ namespace OpenGLEngine
 
             // Set the view
             view = Matrix4.CreateTranslation(0, 0, -3f);
-            
+
             // Perspective projection
             projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45), (float) Size.X / Size.Y, 0.1f, 100f);
         }
@@ -110,6 +147,8 @@ namespace OpenGLEngine
         {
             base.OnRenderFrame(args);
 
+            time += 4 * args.Time;
+
             GL.Clear(ClearBufferMask.ColorBufferBit);
             GL.BindVertexArray(vertexArrayObject);
 
@@ -118,13 +157,13 @@ namespace OpenGLEngine
             shader.Use();
 
             // Determines the position of the model in the world.
-            var model = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(-55.0f));
-            
+            var model = Matrix4.CreateRotationX((float) MathHelper.DegreesToRadians(time));
+
             shader.SetMatrix4("model", model);
             shader.SetMatrix4("view", view);
             shader.SetMatrix4("projection", projection);
 
-            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, vertices.Length);
             SwapBuffers();
         }
 
