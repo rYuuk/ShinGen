@@ -56,8 +56,8 @@ namespace OpenGLEngine
             GL.EnableVertexAttribArray(1);
 
             shader = new Shader(
-                "shader.vert",
-                "shader.frag");
+                "src/shaders/shader.vert",
+                "src/shaders/shader.frag");
         }
 
         protected override void OnUnload()
