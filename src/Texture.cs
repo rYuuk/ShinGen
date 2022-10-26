@@ -8,19 +8,17 @@ using System.IO;
 namespace OpenGLEngine
 {
     // A helper class, much like Shader, meant to simplify loading textures.
-    public class Texture
+    public class Texture : IDisposable
     {
-        public readonly int Handle;
+        private readonly int rendererID;
 
-        public static Texture LoadFromFile(string path)
+        public Texture(string path)
         {
-            // Generate handle
-            var handle = GL.GenTexture();
+            rendererID = GL.GenTexture();
 
             // Bind the handle
             GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, handle);
-
+            GL.BindTexture(TextureTarget.Texture2D, rendererID);
 
             // OpenGL has it's texture origin in the lower left corner instead of the top left corner,
             // so StbImageSharp will to flip the image when loading.
@@ -47,21 +45,19 @@ namespace OpenGLEngine
             // OpenGL will automatically switch between mipmaps when an object gets sufficiently far away.
             // This prevents moiré effects, as well as saving on texture bandwidth.
             GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-
-            return new Texture(handle);
-        }
-
-        public Texture(int glHandle)
-        {
-            Handle = glHandle;
         }
 
         // Activate texture
         // Multiple textures can be bound, if shader needs more than just one.
-        public void Use(TextureUnit unit)
+        public void Bind(int slot = 0)
         {
-            GL.ActiveTexture(unit);
-            GL.BindTexture(TextureTarget.Texture2D, Handle);
+            GL.ActiveTexture(TextureUnit.Texture0 + slot);
+            GL.BindTexture(TextureTarget.Texture2D, rendererID);
+        }
+
+        public void Dispose()
+        {
+            GL.DeleteTexture(rendererID);
         }
     }
 }

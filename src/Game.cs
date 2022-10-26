@@ -66,14 +66,10 @@ namespace OpenGLEngine
         private Texture texture2;
         private double time;
         private Renderer renderer;
-        
+
         private Input input;
         // Instance of the camera class to manage the view and projection matrix code.
         private Camera camera;
-        // A boolean set to true to detect whether or not the mouse has been moved for the first time.
-        private bool firstMove;
-        // The last position of the mouse so we can calculate the mouse offset easily.
-        private Vector2 lastPos;
 
         public Game(int width, int height, string title) :
             base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title })
@@ -104,16 +100,15 @@ namespace OpenGLEngine
                 "src/shaders/shader.vert",
                 "src/shaders/shader.frag");
             shader.Bind();
-
-            texture = Texture.LoadFromFile("Resources/container.jpg");
-            texture.Use(TextureUnit.Texture0);
-
-            texture2 = Texture.LoadFromFile("Resources/awesomeface.png");
-            texture2.Use(TextureUnit.Texture1);
-            
-            shader.SetInt("texture0", 0);
+          
+            texture2 = new Texture("Resources/awesomeface.png");
+            texture2.Bind(1);
             shader.SetInt("texture1", 1);
 
+            texture = new Texture("Resources/container.jpg");
+            texture.Bind();
+            shader.SetInt("texture0", 0);
+            
             // Initialize the camera so that it is 3 units back from where the rectangle is.
             camera = new Camera(Vector3.UnitZ * 3, Size.X / (float) Size.Y, 1.5f, 0.2f);
 
@@ -142,16 +137,18 @@ namespace OpenGLEngine
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             base.OnRenderFrame(args);
+
             time += 8 * args.Time;
+
             renderer.Clear();
-           
+
             // Determines the position of the model in the world.
             var model = Matrix4.CreateRotationX((float) MathHelper.DegreesToRadians(time));
             shader.SetMatrix4("model", model);
             shader.SetMatrix4("view", camera.GetViewMatrix());
             shader.SetMatrix4("projection", camera.GetProjectionMatrix());
 
-            renderer.Draw(vertexArray,vertices, shader);
+            renderer.Draw(vertexArray, vertices, shader);
             SwapBuffers();
         }
 
@@ -182,7 +179,6 @@ namespace OpenGLEngine
 
             // Update the aspect ratio once the window has been resized.
             camera.AspectRatio = Size.X / (float) Size.Y;
-
         }
     }
 }
