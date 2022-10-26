@@ -14,10 +14,10 @@ namespace OpenGLEngine
             var vertexShaderSource = File.ReadAllText(vertexPath);
             var fragmentShaderSource = File.ReadAllText(fragmentPath);
 
-            int vertexShader = GL.CreateShader(ShaderType.VertexShader);
+            var vertexShader = GL.CreateShader(ShaderType.VertexShader);
             GL.ShaderSource(vertexShader, vertexShaderSource);
 
-            int fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
+            var fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
             GL.ShaderSource(fragmentShader, fragmentShaderSource);
 
             CompileShader(vertexShader);
@@ -29,10 +29,10 @@ namespace OpenGLEngine
             GL.AttachShader(Handle, fragmentShader);
 
             GL.LinkProgram(Handle);
-            GL.GetProgram(Handle, GetProgramParameterName.LinkStatus, out int success);
+            GL.GetProgram(Handle, GetProgramParameterName.LinkStatus, out var success);
             if (success == 0)
             {
-                string infoLog = GL.GetShaderInfoLog(Handle);
+                var infoLog = GL.GetShaderInfoLog(Handle);
                 Console.WriteLine(infoLog);
             }
 
@@ -42,11 +42,10 @@ namespace OpenGLEngine
             GL.DeleteShader(vertexShader);
         }
 
-        ~Shader() =>
-            GL.DeleteProgram(Handle);
-
-        public void Use() =>
+        public void Use()
+        {
             GL.UseProgram(Handle);
+        }
 
         public void Dispose()
         {
@@ -57,8 +56,10 @@ namespace OpenGLEngine
         // The shader sources provided with this project use hardcoded layout(location)-s.
         // Dynamically, we can omit the layout(location=X) lines in the vertex shader,
         // and use this in VertexAttribPointer instead of the hardcoded values.
-        public int GetAttribLocation(string attribName) =>
-            GL.GetAttribLocation(Handle, attribName);
+        public int GetAttribLocation(string attribName)
+        {
+            return GL.GetAttribLocation(Handle, attribName);
+        }
 
         public void SetInt(string name, int value)
         {
@@ -87,10 +88,10 @@ namespace OpenGLEngine
         private void CompileShader(int shaderHandle)
         {
             GL.CompileShader(shaderHandle);
-            GL.GetShader(shaderHandle, ShaderParameter.CompileStatus, out int success);
+            GL.GetShader(shaderHandle, ShaderParameter.CompileStatus, out var success);
             if (success == 0)
             {
-                string infoLog = GL.GetShaderInfoLog(shaderHandle);
+                var infoLog = GL.GetShaderInfoLog(shaderHandle);
                 Console.WriteLine(infoLog);
             }
         }

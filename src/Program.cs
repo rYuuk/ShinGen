@@ -1,6 +1,4 @@
-﻿
+﻿using OpenGLEngine;
 
-using OpenGLEngine;
-
-using var game = new Game(800,600, "First Blood");
+using var game = new Game(800, 600, "First Blood");
 game.Run();

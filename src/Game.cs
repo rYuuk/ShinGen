@@ -60,9 +60,10 @@ namespace OpenGLEngine
         };
 
         private int vertexArrayObject;
-        private int vertexBufferObject;
-        private int elementBufferObject;
 
+        private VertexArray vertexArray;
+        private VertexBuffer vertexBuffer;
+        private IndexBuffer indexBuffer;
         private Shader shader;
         private Texture texture;
         private Texture texture2;
@@ -89,30 +90,16 @@ namespace OpenGLEngine
             // Enable depth testing so z-buffer can be checked for fragments and only those which are in front be drawn.
             GL.Enable(EnableCap.DepthTest);
 
-            vertexBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+            vertexArray = new VertexArray();
+            vertexBuffer = new VertexBuffer(vertices.Length * sizeof(float), vertices);
 
-            vertexArrayObject = GL.GenVertexArray();
-            GL.BindVertexArray(vertexArrayObject);
+            var layout = new VertexBufferLayout();
+            layout.Push(0, 3);
+            layout.Push(1, 2);
 
-            elementBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
+            vertexArray.AddBuffer(vertexBuffer, layout);
 
-
-            shader = new Shader(
-                "src/shaders/shader.vert",
-                "src/shaders/shader.frag");
-
-            var vertexLocation = shader.GetAttribLocation("aPosition");
-            GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(vertexLocation);
-
-
-            var texCoordLocation = shader.GetAttribLocation("aTexCoord");
-            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
-            GL.EnableVertexAttribArray(texCoordLocation);
+            indexBuffer = new IndexBuffer(indices.Length, indices);
 
             texture = Texture.LoadFromFile("Resources/container.jpg");
             texture.Use(TextureUnit.Texture0);
@@ -120,6 +107,9 @@ namespace OpenGLEngine
             texture2 = Texture.LoadFromFile("Resources/awesomeface.png");
             texture2.Use(TextureUnit.Texture1);
 
+            shader = new Shader(
+                "src/shaders/shader.vert",
+                "src/shaders/shader.frag");
             shader.Use();
             shader.SetInt("texture0", 0);
             shader.SetInt("texture1", 1);
@@ -134,6 +124,17 @@ namespace OpenGLEngine
         protected override void OnUnload()
         {
             base.OnUnload();
+            // Unbind all the resources by binding the targets to 0/null.
+            vertexBuffer.UnBind();
+            indexBuffer.UnBind();
+            vertexArray.UnBind();
+            GL.UseProgram(0);
+
+            // Delete all the resources.
+            vertexBuffer.Dispose();
+            indexBuffer.Dispose();
+            vertexArray.Dispose();
+
             shader.Dispose();
         }
 
@@ -144,7 +145,7 @@ namespace OpenGLEngine
             time += 8 * args.Time;
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            GL.BindVertexArray(vertexArrayObject);
+            vertexArray.Bind();
 
             texture.Use(TextureUnit.Texture0);
             texture2.Use(TextureUnit.Texture1);
@@ -170,7 +171,7 @@ namespace OpenGLEngine
                 return;
             }
 
-            var input = KeyboardState;
+            KeyboardState? input = KeyboardState;
 
             if (input.IsKeyDown(Keys.Escape))
             {
@@ -214,7 +215,7 @@ namespace OpenGLEngine
             }
 
             // Get the mouse state
-            var mouse = MouseState;
+            MouseState? mouse = MouseState;
 
             if (firstMove)
             {
