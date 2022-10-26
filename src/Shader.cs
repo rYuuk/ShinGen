@@ -39,18 +39,13 @@ namespace OpenGLEngine
             GL.DetachShader(Handle, fragmentShader);
             GL.DeleteShader(fragmentShader);
             GL.DeleteShader(vertexShader);
-
         }
 
-        ~Shader()
-        {
+        ~Shader() =>
             GL.DeleteProgram(Handle);
-        }
 
-        public void Use()
-        {
+        public void Use()  =>
             GL.UseProgram(Handle);
-        }
 
         public void Dispose()
         {
@@ -64,12 +59,17 @@ namespace OpenGLEngine
         public int GetAttribLocation(string attribName) =>
             GL.GetAttribLocation(Handle, attribName);
 
+        public void SetInt(string name, int value)
+        {
+            var location = GL.GetUniformLocation(Handle, name);
+            GL.Uniform1(location, value);
+        }
+
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
                 GL.DeleteProgram(Handle);
-
                 disposedValue = true;
             }
         }

@@ -25,8 +25,10 @@ namespace OpenGLEngine
         private int vertexArrayObject;
         private int vertexBufferObject;
         private int elementBufferObject;
+        
         private Shader shader;
         private Texture texture;
+        private Texture texture2;
 
         public Game(int width, int height, string title) :
             base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title })
@@ -57,6 +59,11 @@ namespace OpenGLEngine
 
             vertexArrayObject = GL.GenVertexArray();
             GL.BindVertexArray(vertexArrayObject);
+            
+            elementBufferObject = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
+
 
             shader = new Shader(
                 "src/shaders/shader.vert",
@@ -66,16 +73,20 @@ namespace OpenGLEngine
             GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
             GL.EnableVertexAttribArray(vertexLocation);
 
-            elementBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
-
+          
             var texCoordLocation = shader.GetAttribLocation("aTexCoord");
             GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
             GL.EnableVertexAttribArray(texCoordLocation);
 
-            texture = new Texture("Resources/container.jpg");
+            texture = Texture.LoadFromFile("Resources/container.jpg");
             texture.Use(TextureUnit.Texture0);
+            
+            texture2 = Texture.LoadFromFile("Resources/awesomeface.png");
+            texture2.Use(TextureUnit.Texture1);
+
+            shader.Use();
+            shader.SetInt("texture0", 0);
+            shader.SetInt("texture1", 1);
         }
 
         protected override void OnUnload()
@@ -89,11 +100,12 @@ namespace OpenGLEngine
             base.OnRenderFrame(args);
 
             GL.Clear(ClearBufferMask.ColorBufferBit);
-
-            shader.Use();
-
             GL.BindVertexArray(vertexArrayObject);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+            
+            texture.Use(TextureUnit.Texture0);
+            texture2.Use(TextureUnit.Texture1);
+            shader.Use();
+            
             GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
             SwapBuffers();
         }
