@@ -26,10 +26,14 @@ namespace OpenGLEngine
         private int vertexArrayObject;
         private int vertexBufferObject;
         private int elementBufferObject;
-        
+
         private Shader shader;
         private Texture texture;
         private Texture texture2;
+
+        private Matrix4 view;
+        private Matrix4 projection;
+
 
         public Game(int width, int height, string title) :
             base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title })
@@ -60,7 +64,7 @@ namespace OpenGLEngine
 
             vertexArrayObject = GL.GenVertexArray();
             GL.BindVertexArray(vertexArrayObject);
-            
+
             elementBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
             GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
@@ -74,26 +78,26 @@ namespace OpenGLEngine
             GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
             GL.EnableVertexAttribArray(vertexLocation);
 
-          
+
             var texCoordLocation = shader.GetAttribLocation("aTexCoord");
             GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
             GL.EnableVertexAttribArray(texCoordLocation);
 
             texture = Texture.LoadFromFile("Resources/container.jpg");
             texture.Use(TextureUnit.Texture0);
-            
+
             texture2 = Texture.LoadFromFile("Resources/awesomeface.png");
             texture2.Use(TextureUnit.Texture1);
 
             shader.Use();
             shader.SetInt("texture0", 0);
             shader.SetInt("texture1", 1);
+
+            // Set the view
+            view = Matrix4.CreateTranslation(0, 0, -3f);
             
-            var rotation = Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(90.0f));
-            var scale = Matrix4.CreateScale(0.5f, 0.5f, 0.5f);
-            Matrix4 trans = rotation * scale;
-            
-            shader.SetMatrix4("transform", trans);
+            // Perspective projection
+            projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45), (float) Size.X / Size.Y, 0.1f, 100f);
         }
 
         protected override void OnUnload()
@@ -108,11 +112,18 @@ namespace OpenGLEngine
 
             GL.Clear(ClearBufferMask.ColorBufferBit);
             GL.BindVertexArray(vertexArrayObject);
-            
+
             texture.Use(TextureUnit.Texture0);
             texture2.Use(TextureUnit.Texture1);
             shader.Use();
+
+            // Determines the position of the model in the world.
+            var model = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(-55.0f));
             
+            shader.SetMatrix4("model", model);
+            shader.SetMatrix4("view", view);
+            shader.SetMatrix4("projection", projection);
+
             GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
             SwapBuffers();
         }
