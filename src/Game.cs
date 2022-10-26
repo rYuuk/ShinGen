@@ -98,19 +98,19 @@ namespace OpenGLEngine
             layout.Push(1, 2);
 
             vertexArray.AddBuffer(vertexBuffer, layout);
-
             indexBuffer = new IndexBuffer(indices.Length, indices);
+
+            shader = new Shader(
+                "src/shaders/shader.vert",
+                "src/shaders/shader.frag");
+            shader.Bind();
 
             texture = Texture.LoadFromFile("Resources/container.jpg");
             texture.Use(TextureUnit.Texture0);
 
             texture2 = Texture.LoadFromFile("Resources/awesomeface.png");
             texture2.Use(TextureUnit.Texture1);
-
-            shader = new Shader(
-                "src/shaders/shader.vert",
-                "src/shaders/shader.frag");
-            shader.Bind();
+            
             shader.SetInt("texture0", 0);
             shader.SetInt("texture1", 1);
 
@@ -142,17 +142,11 @@ namespace OpenGLEngine
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             base.OnRenderFrame(args);
-
             time += 8 * args.Time;
-
             renderer.Clear();
-
-            texture.Use(TextureUnit.Texture0);
-            texture2.Use(TextureUnit.Texture1);
-
+           
             // Determines the position of the model in the world.
             var model = Matrix4.CreateRotationX((float) MathHelper.DegreesToRadians(time));
-
             shader.SetMatrix4("model", model);
             shader.SetMatrix4("view", camera.GetViewMatrix());
             shader.SetMatrix4("projection", camera.GetProjectionMatrix());

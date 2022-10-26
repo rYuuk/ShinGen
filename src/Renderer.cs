@@ -14,7 +14,7 @@ namespace OpenGLEngine
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             vertexArray.Bind();
             shader.Bind();
-            
+
             GL.DrawArrays(PrimitiveType.Triangles, 0, vertices.Length);
         }
     }
