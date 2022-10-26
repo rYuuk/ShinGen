@@ -5,7 +5,7 @@ namespace OpenGLEngine
 {
     public class Shader : IDisposable
     {
-        private readonly int program;
+        public int Handle;
         private bool disposedValue;
 
         public Shader(string vertexPath, string fragmentPath)
@@ -22,21 +22,21 @@ namespace OpenGLEngine
             CompileShader(vertexShader);
             CompileShader(fragmentShader);
 
-            program = GL.CreateProgram();
+            Handle = GL.CreateProgram();
 
-            GL.AttachShader(program, vertexShader);
-            GL.AttachShader(program, fragmentShader);
+            GL.AttachShader(Handle, vertexShader);
+            GL.AttachShader(Handle, fragmentShader);
 
-            GL.LinkProgram(program);
-            GL.GetProgram(program, GetProgramParameterName.LinkStatus, out int success);
+            GL.LinkProgram(Handle);
+            GL.GetProgram(Handle, GetProgramParameterName.LinkStatus, out int success);
             if (success == 0)
             {
-                string infoLog = GL.GetShaderInfoLog(program);
+                string infoLog = GL.GetShaderInfoLog(Handle);
                 Console.WriteLine(infoLog);
             }
 
-            GL.DetachShader(program, vertexShader);
-            GL.DetachShader(program, fragmentShader);
+            GL.DetachShader(Handle, vertexShader);
+            GL.DetachShader(Handle, fragmentShader);
             GL.DeleteShader(fragmentShader);
             GL.DeleteShader(vertexShader);
 
@@ -44,12 +44,12 @@ namespace OpenGLEngine
 
         ~Shader()
         {
-            GL.DeleteProgram(program);
+            GL.DeleteProgram(Handle);
         }
 
         public void Use()
         {
-            GL.UseProgram(program);
+            GL.UseProgram(Handle);
         }
 
         public void Dispose()
@@ -62,7 +62,7 @@ namespace OpenGLEngine
         {
             if (!disposedValue)
             {
-                GL.DeleteProgram(program);
+                GL.DeleteProgram(Handle);
 
                 disposedValue = true;
             }

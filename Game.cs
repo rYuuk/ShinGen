@@ -7,21 +7,16 @@ namespace OpenGLEngine
 {
     public class Game : GameWindow
     {
-        private readonly float[] vertices = {
-            0.5f,  0.5f, 0.0f,  // top right
-            0.5f, -0.5f, 0.0f,  // bottom right
-            -0.5f, -0.5f, 0.0f,  // bottom left
-            -0.5f,  0.5f, 0.0f   // top left
-        };
-
-        private readonly uint[] indices = {  // note that we start from 0!
-            0, 1, 3,   // first triangle
-            1, 2, 3    // second triangle
+        private readonly float[] vertices =
+        {
+            // positions        // colors
+            0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom right
+            -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
+            0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f // top 
         };
 
         private int vertexArrayObject;
         private int vertexBufferObject;
-        private int elementBufferObject;
         private Shader shader;
 
         public Game(int width, int height, string title) :
@@ -50,19 +45,18 @@ namespace OpenGLEngine
             vertexBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
-            
+
             vertexArrayObject = GL.GenVertexArray();
             GL.BindVertexArray(vertexArrayObject);
-          
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
-            
-            elementBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
-            
+
+            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
+            GL.EnableVertexAttribArray(1);
+
             shader = new Shader(
-                "shader.vert", 
+                "shader.vert",
                 "shader.frag");
         }
 
@@ -79,8 +73,10 @@ namespace OpenGLEngine
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             shader.Use();
+
+            // render the triangle
             GL.BindVertexArray(vertexArrayObject);
-            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
 
             SwapBuffers();
         }
