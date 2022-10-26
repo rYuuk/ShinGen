@@ -2,7 +2,6 @@
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
-using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace OpenGLEngine
 {
@@ -66,7 +65,8 @@ namespace OpenGLEngine
         private Texture texture;
         private Texture texture2;
         private double time;
-
+        private Renderer renderer;
+        
         private Input input;
         // Instance of the camera class to manage the view and projection matrix code.
         private Camera camera;
@@ -89,6 +89,7 @@ namespace OpenGLEngine
             // Enable depth testing so z-buffer can be checked for fragments and only those which are in front be drawn.
             GL.Enable(EnableCap.DepthTest);
 
+            renderer = new Renderer();
             vertexArray = new VertexArray();
             vertexBuffer = new VertexBuffer(vertices.Length * sizeof(float), vertices);
 
@@ -144,12 +145,10 @@ namespace OpenGLEngine
 
             time += 8 * args.Time;
 
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            vertexArray.Bind();
+            renderer.Clear();
 
             texture.Use(TextureUnit.Texture0);
             texture2.Use(TextureUnit.Texture1);
-            shader.Bind();
 
             // Determines the position of the model in the world.
             var model = Matrix4.CreateRotationX((float) MathHelper.DegreesToRadians(time));
@@ -158,7 +157,7 @@ namespace OpenGLEngine
             shader.SetMatrix4("view", camera.GetViewMatrix());
             shader.SetMatrix4("projection", camera.GetProjectionMatrix());
 
-            GL.DrawArrays(PrimitiveType.Triangles, 0, vertices.Length);
+            renderer.Draw(vertexArray,vertices, shader);
             SwapBuffers();
         }
 
