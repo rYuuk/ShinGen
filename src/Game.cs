@@ -94,6 +94,9 @@ namespace OpenGLEngine
             base.OnLoad();
 
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+            
+            // Enable depth testing so z-buffer can be checked for fragments and only those which are in front be drawn.
+            GL.Enable(EnableCap.DepthTest);
 
             vertexBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
@@ -149,7 +152,7 @@ namespace OpenGLEngine
 
             time += 4 * args.Time;
 
-            GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.BindVertexArray(vertexArrayObject);
 
             texture.Use(TextureUnit.Texture0);
