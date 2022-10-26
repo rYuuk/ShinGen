@@ -1,5 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL;
-using GL = OpenTK.Graphics.OpenGL.GL;
+﻿using OpenTK.Graphics.OpenGL4;
+using GL = OpenTK.Graphics.OpenGL4.GL;
 
 namespace OpenGLEngine
 {
@@ -57,7 +57,13 @@ namespace OpenGLEngine
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-        
+
+        // The shader sources provided with this project use hardcoded layout(location)-s.
+        // Dynamically, we can omit the layout(location=X) lines in the vertex shader,
+        // and use this in VertexAttribPointer instead of the hardcoded values.
+        public int GetAttribLocation(string attribName) =>
+            GL.GetAttribLocation(Handle, attribName);
+
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
