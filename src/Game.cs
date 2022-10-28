@@ -7,70 +7,20 @@ namespace OpenGLEngine
 {
     public class Game : GameWindow
     {
-        private readonly float[] vertices =
-        {
-            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-            0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-
-            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-            0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-            0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-            -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-
-            -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-            -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-            -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-
-            0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-            0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-            0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-            0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-            0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-
-            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-            0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-
-            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-            0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-            0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-            -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
-            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f
-        };
-
-        private readonly uint[] indices =
-        {
-            0, 1, 3,
-            1, 2, 3
-        };
-
+        private CubeData cubeData;
         private VertexArray vertexArray;
+        private VertexArray vertexArrayLamp;
         private VertexBuffer vertexBuffer;
-        private IndexBuffer indexBuffer;
+        private Shader lampShader;
         private Shader shader;
-        private Texture texture;
-        private Texture texture2;
-        private double time;
         private Renderer renderer;
 
         private Input input;
         // Instance of the camera class to manage the view and projection matrix code.
         private Camera camera;
 
+        private readonly Vector3 lampPos = new Vector3(1.2f, 1.0f, 2.0f);
+        
         public Game(int width, int height, string title) :
             base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title })
         {
@@ -80,34 +30,28 @@ namespace OpenGLEngine
         {
             base.OnLoad();
 
-            GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-
-            // Enable depth testing so z-buffer can be checked for fragments and only those which are in front be drawn.
-            GL.Enable(EnableCap.DepthTest);
-
+            cubeData = new CubeData();
             renderer = new Renderer();
+            
+            vertexBuffer = new VertexBuffer(cubeData.Vertices.Length * sizeof(float), cubeData.Vertices);
+            
             vertexArray = new VertexArray();
-            vertexBuffer = new VertexBuffer(vertices.Length * sizeof(float), vertices);
-
             var layout = new VertexBufferLayout();
             layout.Push(0, 3);
-            layout.Push(1, 2);
-
             vertexArray.AddBuffer(vertexBuffer, layout);
-            indexBuffer = new IndexBuffer(indices.Length, indices);
+
+            vertexArrayLamp = new VertexArray();
+            var lampLayout = new VertexBufferLayout();
+            lampLayout.Push(0, 3);
+            vertexArrayLamp.AddBuffer(vertexBuffer, lampLayout);
+            
+            lampShader = new Shader(
+                "src/shaders/shader.vert",
+                "src/shaders/lighting.frag");
 
             shader = new Shader(
                 "src/shaders/shader.vert",
-                "src/shaders/shader.frag");
-            shader.Bind();
-          
-            texture2 = new Texture("Resources/awesomeface.png");
-            texture2.Bind(1);
-            shader.SetInt("texture1", 1);
-
-            texture = new Texture("Resources/container.jpg");
-            texture.Bind();
-            shader.SetInt("texture0", 0);
+                "src/shaders/shader.frag"); 
             
             // Initialize the camera so that it is 3 units back from where the rectangle is.
             camera = new Camera(Vector3.UnitZ * 3, Size.X / (float) Size.Y, 1.5f, 0.2f);
@@ -123,13 +67,11 @@ namespace OpenGLEngine
             base.OnUnload();
             // Unbind all the resources by binding the targets to 0/null.
             vertexBuffer.UnBind();
-            indexBuffer.UnBind();
             vertexArray.UnBind();
             shader.Unbind();
 
             // Delete all the resources.
             vertexBuffer.Dispose();
-            indexBuffer.Dispose();
             vertexArray.Dispose();
             shader.Dispose();
         }
@@ -137,18 +79,28 @@ namespace OpenGLEngine
         protected override void OnRenderFrame(FrameEventArgs args)
         {
             base.OnRenderFrame(args);
-
-            time += 8 * args.Time;
-
             renderer.Clear();
+            
+            Matrix4 lampMatrix = Matrix4.Identity;
+            lampMatrix *= Matrix4.CreateScale(0.2f);
+            lampMatrix *= Matrix4.CreateTranslation(lampPos);
+            
+            lampShader.Bind();
+            lampShader.SetMatrix4("model", lampMatrix);
+            lampShader.SetMatrix4("view", camera.GetViewMatrix());
+            lampShader.SetMatrix4("projection", camera.GetProjectionMatrix());
+            
+            renderer.Draw(vertexArray, cubeData.Vertices, lampShader);
 
-            // Determines the position of the model in the world.
-            var model = Matrix4.CreateRotationX((float) MathHelper.DegreesToRadians(time));
-            shader.SetMatrix4("model", model);
+            shader.Bind();
+            shader.SetMatrix4("model", Matrix4.Identity);
             shader.SetMatrix4("view", camera.GetViewMatrix());
             shader.SetMatrix4("projection", camera.GetProjectionMatrix());
-
-            renderer.Draw(vertexArray, vertices, shader);
+            shader.SetVector3("objectColor", new Vector3(1.0f, 0.5f, 0.31f));
+            shader.SetVector3("lightColor", new Vector3(1.0f, 1.0f, 1.0f));
+            
+            renderer.Draw(vertexArray, cubeData.Vertices, shader);
+            
             SwapBuffers();
         }
 

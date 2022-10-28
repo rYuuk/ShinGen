@@ -6,7 +6,10 @@ in vec2 texCoord;
 uniform sampler2D texture0;
 uniform sampler2D texture1;
 
+uniform vec3 objectColor;
+uniform vec3 lightColor;
+
 void main()
 {
-    outputColor = mix(texture(texture0, texCoord), texture(texture1, texCoord), 0.2);
+    outputColor = vec4(lightColor * objectColor, 1.0);;
 }
