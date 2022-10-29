@@ -99,10 +99,17 @@ namespace OpenGLEngine
             shader.SetMatrix4("model", Matrix4.Identity);
             shader.SetMatrix4("view", camera.GetViewMatrix());
             shader.SetMatrix4("projection", camera.GetProjectionMatrix());
-            shader.SetVector3("objectColor", new Vector3(1.0f, 0.5f, 0.31f));
-            shader.SetVector3("lightColor", new Vector3(1.0f, 1.0f, 1.0f));
-            shader.SetVector3("lightPos", lampPos);
             shader.SetVector3("viewPos", camera.Position);
+
+            shader.SetVector3("material.ambient", new Vector3(1.0f, 0.5f, 0.31f));
+            shader.SetVector3("material.diffuse", new Vector3(1.0f, 0.5f, 0.31f));
+            shader.SetVector3("material.specular", new Vector3(0.5f, 0.5f, 0.5f));
+            shader.SetFloat("material.shininess", 32.0f);
+            shader.SetVector3("light.ambient",  new Vector3(0.2f, 0.2f, 0.2f));
+            shader.SetVector3("light.diffuse",  new Vector3(0.5f, 0.5f, 0.5f)); // darken the light a bit to fit the scene
+            shader.SetVector3("light.specular", new Vector3(1.0f, 1.0f, 1.0f));
+            
+            shader.SetVector3("light.position", lampPos);
             
             renderer.Draw(vertexArray, cubeData.VerticesWithNormal, shader);
 

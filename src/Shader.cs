@@ -52,6 +52,11 @@ namespace OpenGLEngine
             GL.Uniform1(uniformLocations[name], value);
         }
 
+        public void SetFloat(string name, float value)
+        {
+            GL.Uniform1(uniformLocations[name], value);
+        }
+        
         public void SetVector3(string name, Vector3 value)
         {
             GL.Uniform3(uniformLocations[name], value);
