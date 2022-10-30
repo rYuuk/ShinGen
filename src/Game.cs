@@ -26,6 +26,20 @@ namespace OpenGLEngine
 
         private readonly Vector3 lampPos = new Vector3(1.2f, 1.0f, 2.0f);
 
+        private readonly Vector3[] cubePositions =
+        {
+            new Vector3(0.0f, 0.0f, 0.0f),
+            new Vector3(2.0f, 5.0f, -15.0f),
+            new Vector3(-1.5f, -2.2f, -2.5f),
+            new Vector3(-3.8f, -2.0f, -12.3f),
+            new Vector3(2.4f, -0.4f, -3.5f),
+            new Vector3(-1.7f, 3.0f, -7.5f),
+            new Vector3(1.3f, -2.0f, -2.5f),
+            new Vector3(1.5f, 2.0f, -2.5f),
+            new Vector3(1.5f, 0.2f, -1.5f),
+            new Vector3(-1.3f, 1.0f, -1.5f)
+        };
+        
         public Game(int width, int height, string title) :
             base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title })
         {
@@ -116,21 +130,21 @@ namespace OpenGLEngine
 
             shader.SetFloat("material.shininess", 32.0f);
 
-            Vector3 lightColor;
-            float time = DateTime.Now.Second + DateTime.Now.Millisecond / 1000f;
-            lightColor.X = (MathF.Sin(time * 2.0f) + 1) / 2f;
-            lightColor.Y = (MathF.Sin(time * 0.7f) + 1) / 2f;
-            lightColor.Z = (MathF.Sin(time * 1.3f) + 1) / 2f;
-
-            Vector3 ambientColor = lightColor * new Vector3(0.2f);
-            Vector3 diffuseColor = lightColor * new Vector3(0.5f);
-
-            shader.SetVector3("light.position", lampPos);
+            shader.SetVector3("light.direction", new Vector3(-0.2f, -1.0f, -0.3f));
             shader.SetVector3("light.ambient", new Vector3(0.2f));
             shader.SetVector3("light.diffuse", new Vector3(0.5f));
             shader.SetVector3("light.specular", new Vector3(1.0f));
 
-            renderer.Draw(vertexArray, cubeData.Vertices, shader);
+            for (int i = 0; i < cubePositions.Length; i++)
+            {
+                Matrix4 model = Matrix4.Identity;
+                model *= Matrix4.CreateTranslation(cubePositions[i]);
+                float angle = 20.0f * i;
+                model *= Matrix4.CreateFromAxisAngle(new Vector3(1.0f, 0.3f, 0.5f), angle);
+                shader.SetMatrix4("model", model);
+    
+                renderer.Draw(vertexArray, cubeData.Vertices, shader);
+            }
 
             SwapBuffers();
         }
