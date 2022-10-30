@@ -7,13 +7,18 @@ namespace OpenGLEngine
 {
     public class Game : GameWindow
     {
+        private Renderer renderer;
         private CubeData cubeData;
+
         private VertexArray vertexArray;
         private VertexArray vertexArrayLamp;
         private VertexBuffer vertexBuffer;
+
         private Shader lampShader;
         private Shader shader;
-        private Renderer renderer;
+
+        private Texture diffuseMap;
+        private Texture specularMap;
 
         private Input input;
         // Instance of the camera class to manage the view and projection matrix code.
@@ -32,13 +37,16 @@ namespace OpenGLEngine
 
             cubeData = new CubeData();
             renderer = new Renderer();
-
-            vertexBuffer = new VertexBuffer(cubeData.VerticesWithNormal.Length * sizeof(float), cubeData.VerticesWithNormal);
+            diffuseMap = new Texture("resources/container2.png");
+            specularMap = new Texture("resources/container2_specular.png");
+            ;
+            vertexBuffer = new VertexBuffer(cubeData.Vertices.Length * sizeof(float), cubeData.Vertices);
 
             vertexArray = new VertexArray();
             var layout = new VertexBufferLayout();
             layout.Push(0, 3);
             layout.Push(1, 3);
+            layout.Push(2, 2);
             vertexArray.AddBuffer(vertexBuffer, layout);
 
             vertexArrayLamp = new VertexArray();
@@ -93,7 +101,7 @@ namespace OpenGLEngine
             lampShader.SetMatrix4("view", camera.GetViewMatrix());
             lampShader.SetMatrix4("projection", camera.GetProjectionMatrix());
 
-            renderer.Draw(vertexArray, cubeData.VerticesWithNormal, lampShader);
+            renderer.Draw(vertexArray, cubeData.Vertices, lampShader);
 
             shader.Bind();
             shader.SetMatrix4("model", Matrix4.Identity);
@@ -101,17 +109,28 @@ namespace OpenGLEngine
             shader.SetMatrix4("projection", camera.GetProjectionMatrix());
             shader.SetVector3("viewPos", camera.Position);
 
-            shader.SetVector3("material.ambient", new Vector3(1.0f, 0.5f, 0.31f));
-            shader.SetVector3("material.diffuse", new Vector3(1.0f, 0.5f, 0.31f));
-            shader.SetVector3("material.specular", new Vector3(0.5f, 0.5f, 0.5f));
+            diffuseMap.Bind();
+            shader.SetInt("material.diffuse", 0);
+            specularMap.Bind(1);
+            shader.SetInt("material.specular", 1);
+
             shader.SetFloat("material.shininess", 32.0f);
-            shader.SetVector3("light.ambient",  new Vector3(0.2f, 0.2f, 0.2f));
-            shader.SetVector3("light.diffuse",  new Vector3(0.5f, 0.5f, 0.5f)); // darken the light a bit to fit the scene
-            shader.SetVector3("light.specular", new Vector3(1.0f, 1.0f, 1.0f));
-            
+
+            Vector3 lightColor;
+            float time = DateTime.Now.Second + DateTime.Now.Millisecond / 1000f;
+            lightColor.X = (MathF.Sin(time * 2.0f) + 1) / 2f;
+            lightColor.Y = (MathF.Sin(time * 0.7f) + 1) / 2f;
+            lightColor.Z = (MathF.Sin(time * 1.3f) + 1) / 2f;
+
+            Vector3 ambientColor = lightColor * new Vector3(0.2f);
+            Vector3 diffuseColor = lightColor * new Vector3(0.5f);
+
             shader.SetVector3("light.position", lampPos);
-            
-            renderer.Draw(vertexArray, cubeData.VerticesWithNormal, shader);
+            shader.SetVector3("light.ambient", new Vector3(0.2f));
+            shader.SetVector3("light.diffuse", new Vector3(0.5f));
+            shader.SetVector3("light.specular", new Vector3(1.0f));
+
+            renderer.Draw(vertexArray, cubeData.Vertices, shader);
 
             SwapBuffers();
         }
