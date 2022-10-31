@@ -129,10 +129,15 @@ namespace OpenGLEngine
             shader.SetInt("material.specular", 1);
             shader.SetFloat("material.shininess", 32.0f);
 
-            shader.SetVector3("light.position", lampPos);
+            shader.SetVector3("light.position", camera.Position);
+            shader.SetVector3("light.direction", camera.Front);
+            shader.SetFloat("light.cutOff", (float)Math.Cos(MathHelper.DegreesToRadians(12.5)));
+            shader.SetFloat("light.outerCutOff", (float)Math.Cos(MathHelper.DegreesToRadians(17.5)));
+
             shader.SetVector3("light.ambient", new Vector3(0.2f));
             shader.SetVector3("light.diffuse", new Vector3(0.5f));
             shader.SetVector3("light.specular", new Vector3(1.0f));
+            
             shader.SetFloat("light.constant",  1.0f);
             shader.SetFloat("light.linear", 0.09f);
             shader.SetFloat("light.quadratic", 0.032f);

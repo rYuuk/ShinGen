@@ -8,6 +8,9 @@ struct Material {
 
 struct Light {
     vec3 position;
+    vec3 direction;
+    float cutOff;
+    float outerCutOff;
 
     vec3 ambient;
     vec3 diffuse;
@@ -50,9 +53,14 @@ void main()
     float distance = length(light.position - FragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
 
-    ambient *= attenuation;
-    diffuse *= attenuation;
-    specular *= attenuation;
+    float theta = dot(lightDir, normalize(-light.direction));
+    float epsilon = light.cutOff - light.outerCutOff;
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+
+    //When applying the spotlight intensity we want to multiply it.
+    ambient  *= attenuation;
+    diffuse  *= attenuation * intensity;
+    specular *= attenuation * intensity;
 
     vec3 result = ambient + diffuse + specular;
     FragColor = vec4(result, 1.0);
