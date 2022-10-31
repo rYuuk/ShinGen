@@ -53,7 +53,6 @@ namespace OpenGLEngine
             renderer = new Renderer();
             diffuseMap = new Texture("resources/container2.png");
             specularMap = new Texture("resources/container2_specular.png");
-            ;
             vertexBuffer = new VertexBuffer(cubeData.Vertices.Length * sizeof(float), cubeData.Vertices);
 
             vertexArray = new VertexArray();
@@ -66,7 +65,8 @@ namespace OpenGLEngine
             vertexArrayLamp = new VertexArray();
             var lampLayout = new VertexBufferLayout();
             lampLayout.Push(0, 3);
-            layout.Push(1, 3);
+            lampLayout.Push(1, 3);
+            lampLayout.Push(2, 2);
 
             vertexArrayLamp.AddBuffer(vertexBuffer, lampLayout);
 
@@ -117,29 +117,31 @@ namespace OpenGLEngine
 
             renderer.Draw(vertexArray, cubeData.Vertices, lampShader);
 
+            diffuseMap.Bind();
+            specularMap.Bind(1);
+            
             shader.Bind();
-            shader.SetMatrix4("model", Matrix4.Identity);
             shader.SetMatrix4("view", camera.GetViewMatrix());
             shader.SetMatrix4("projection", camera.GetProjectionMatrix());
             shader.SetVector3("viewPos", camera.Position);
 
-            diffuseMap.Bind();
             shader.SetInt("material.diffuse", 0);
-            specularMap.Bind(1);
             shader.SetInt("material.specular", 1);
-
             shader.SetFloat("material.shininess", 32.0f);
 
-            shader.SetVector3("light.direction", new Vector3(-0.2f, -1.0f, -0.3f));
+            shader.SetVector3("light.position", lampPos);
             shader.SetVector3("light.ambient", new Vector3(0.2f));
             shader.SetVector3("light.diffuse", new Vector3(0.5f));
             shader.SetVector3("light.specular", new Vector3(1.0f));
+            shader.SetFloat("light.constant",  1.0f);
+            shader.SetFloat("light.linear", 0.09f);
+            shader.SetFloat("light.quadratic", 0.032f);
 
-            for (int i = 0; i < cubePositions.Length; i++)
+            for (var i = 0; i < cubePositions.Length; i++)
             {
                 Matrix4 model = Matrix4.Identity;
                 model *= Matrix4.CreateTranslation(cubePositions[i]);
-                float angle = 20.0f * i;
+                var angle = 20.0f * i;
                 model *= Matrix4.CreateFromAxisAngle(new Vector3(1.0f, 0.3f, 0.5f), angle);
                 shader.SetMatrix4("model", model);
     
