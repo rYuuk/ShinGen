@@ -39,7 +39,15 @@ namespace OpenGLEngine
             new Vector3(1.5f, 0.2f, -1.5f),
             new Vector3(-1.3f, 1.0f, -1.5f)
         };
-        
+
+        private readonly Vector3[] pointLightPositions =
+        {
+            new Vector3(0.7f, 0.2f, 2.0f),
+            new Vector3(2.3f, -3.3f, -4.0f),
+            new Vector3(-4.0f, 2.0f, -12.0f),
+            new Vector3(0.0f, 0.0f, -3.0f)
+        };
+
         public Game(int width, int height, string title) :
             base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title })
         {
@@ -89,6 +97,7 @@ namespace OpenGLEngine
 
         protected override void OnUnload()
         {
+            Console.WriteLine("UnLoad");
             base.OnUnload();
             // Unbind all the resources by binding the targets to 0/null.
             vertexBuffer.UnBind();
@@ -106,20 +115,9 @@ namespace OpenGLEngine
             base.OnRenderFrame(args);
             renderer.Clear();
 
-            Matrix4 lampMatrix = Matrix4.Identity;
-            lampMatrix *= Matrix4.CreateScale(0.2f);
-            lampMatrix *= Matrix4.CreateTranslation(lampPos);
-
-            lampShader.Bind();
-            lampShader.SetMatrix4("model", lampMatrix);
-            lampShader.SetMatrix4("view", camera.GetViewMatrix());
-            lampShader.SetMatrix4("projection", camera.GetProjectionMatrix());
-
-            renderer.Draw(vertexArray, cubeData.Vertices, lampShader);
-
             diffuseMap.Bind();
             specularMap.Bind(1);
-            
+
             shader.Bind();
             shader.SetMatrix4("view", camera.GetViewMatrix());
             shader.SetMatrix4("projection", camera.GetProjectionMatrix());
@@ -128,20 +126,37 @@ namespace OpenGLEngine
             shader.SetInt("material.diffuse", 0);
             shader.SetInt("material.specular", 1);
             shader.SetFloat("material.shininess", 32.0f);
-
-            shader.SetVector3("light.position", camera.Position);
-            shader.SetVector3("light.direction", camera.Front);
-            shader.SetFloat("light.cutOff", (float)Math.Cos(MathHelper.DegreesToRadians(12.5)));
-            shader.SetFloat("light.outerCutOff", (float)Math.Cos(MathHelper.DegreesToRadians(17.5)));
-
-            shader.SetVector3("light.ambient", new Vector3(0.2f));
-            shader.SetVector3("light.diffuse", new Vector3(0.5f));
-            shader.SetVector3("light.specular", new Vector3(1.0f));
             
-            shader.SetFloat("light.constant",  1.0f);
-            shader.SetFloat("light.linear", 0.09f);
-            shader.SetFloat("light.quadratic", 0.032f);
-
+            // Directional light
+            shader.SetVector3("dirLight.direction", new Vector3(-0.2f, -1.0f, -0.3f));
+            shader.SetVector3("dirLight.ambient", new Vector3(0.05f, 0.05f, 0.05f));
+            shader.SetVector3("dirLight.diffuse", new Vector3(0.4f, 0.4f, 0.4f));
+            shader.SetVector3("dirLight.specular", new Vector3(0.5f, 0.5f, 0.5f));
+            
+            // Point lights
+            for (int i = 0; i < pointLightPositions.Length; i++)
+            {
+                shader.SetVector3($"pointLights[{i}].position", pointLightPositions[i]);
+                shader.SetVector3($"pointLights[{i}].ambient", new Vector3(0.05f, 0.05f, 0.05f));
+                shader.SetVector3($"pointLights[{i}].diffuse", new Vector3(0.8f, 0.8f, 0.8f));
+                shader.SetVector3($"pointLights[{i}].specular", new Vector3(1.0f, 1.0f, 1.0f));
+                shader.SetFloat($"pointLights[{i}].constant", 1.0f);
+                shader.SetFloat($"pointLights[{i}].linear", 0.09f);
+                shader.SetFloat($"pointLights[{i}].quadratic", 0.032f);
+            }
+            
+            // Spot light
+            shader.SetVector3("spotLight.position", camera.Position);
+            shader.SetVector3("spotLight.direction", camera.Front);
+            shader.SetVector3("spotLight.ambient", new Vector3(0.0f, 0.0f, 0.0f));
+            shader.SetVector3("spotLight.diffuse", new Vector3(1.0f, 1.0f, 1.0f));
+            shader.SetVector3("spotLight.specular", new Vector3(1.0f, 1.0f, 1.0f));
+            shader.SetFloat("spotLight.constant", 1.0f);
+            shader.SetFloat("spotLight.linear", 0.09f);
+            shader.SetFloat("spotLight.quadratic", 0.032f);
+            shader.SetFloat("spotLight.cutOff", MathF.Cos(MathHelper.DegreesToRadians(12.5f)));
+            shader.SetFloat("spotLight.outerCutOff", MathF.Cos(MathHelper.DegreesToRadians(17.5f)));
+            
             for (var i = 0; i < cubePositions.Length; i++)
             {
                 Matrix4 model = Matrix4.Identity;
@@ -149,8 +164,20 @@ namespace OpenGLEngine
                 var angle = 20.0f * i;
                 model *= Matrix4.CreateFromAxisAngle(new Vector3(1.0f, 0.3f, 0.5f), angle);
                 shader.SetMatrix4("model", model);
-    
+            
                 renderer.Draw(vertexArray, cubeData.Vertices, shader);
+            }
+            
+            lampShader.Bind();
+            lampShader.SetMatrix4("view", camera.GetViewMatrix());
+            lampShader.SetMatrix4("projection", camera.GetProjectionMatrix());
+            
+            for (var i = 0; i < pointLightPositions.Length; i++)
+            {
+                var lampMatrix = Matrix4.CreateScale(0.2f);
+                lampMatrix *= Matrix4.CreateTranslation(pointLightPositions[i]);
+                lampShader.SetMatrix4("model", lampMatrix);
+                renderer.Draw(vertexArray, cubeData.Vertices, lampShader);
             }
 
             SwapBuffers();
