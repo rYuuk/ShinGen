@@ -10,9 +10,9 @@ namespace OpenGLEngine
     // A helper class, much like Shader, meant to simplify loading textures.
     public class Texture : IDisposable
     {
-        private readonly int rendererID;
+        private int rendererID;
 
-        public Texture(string path)
+        public void LoadFromPath(string path)
         {
             rendererID = GL.GenTexture();
 

@@ -4,9 +4,16 @@ namespace OpenGLEngine
 {
     public class Renderer
     {
+        private readonly bool enableDepthTest;
+
         public Renderer(bool enableDepthTest = true)
         {
-            GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+            this.enableDepthTest = enableDepthTest;
+        }
+
+        public void Load()
+        {
+            GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
             if (enableDepthTest)
             {

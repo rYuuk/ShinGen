@@ -6,12 +6,22 @@ namespace OpenGLEngine
 {
     public class Shader : IDisposable
     {
+        private readonly string vertexPath;
+        private readonly string fragmentPath;
+        
         private int rendererID;
         private bool disposedValue;
 
         private Dictionary<string, int> uniformLocations;
 
         public Shader(string vertexPath, string fragmentPath)
+        {
+            this.vertexPath = vertexPath;
+            this.fragmentPath = fragmentPath;
+            uniformLocations = new Dictionary<string, int>();
+        }
+
+        public void Load()
         {
             var vertexShader = Compile(ShaderType.VertexShader, vertexPath);
             var fragmentShader = Compile(ShaderType.FragmentShader, fragmentPath);

@@ -4,9 +4,9 @@ namespace OpenGLEngine
 {
     public class VertexArray : IDisposable
     {
-        private readonly int rendererID;
+        private int rendererID;
 
-        public VertexArray()
+        public void Load()
         {
             rendererID = GL.GenVertexArray();
             GL.BindVertexArray(rendererID);

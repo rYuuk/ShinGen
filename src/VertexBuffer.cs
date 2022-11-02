@@ -5,9 +5,18 @@ namespace OpenGLEngine
 {
     public class VertexBuffer : IDisposable
     {
-        private readonly int rendererID;
+        private readonly int size;
+        private readonly float[] data;
+
+        private int rendererID;
 
         public VertexBuffer(int size, float[] data)
+        {
+            this.size = size;
+            this.data = data;
+        }
+
+        public void Load()
         {
             rendererID = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, rendererID);

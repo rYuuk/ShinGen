@@ -8,24 +8,22 @@ namespace OpenGLEngine
     public class Application : IDisposable
     {
         private readonly GameWindow window;
-        private Renderer renderer;
-        private CubeData cubeData;
+        private readonly Renderer renderer;
+        private readonly CubeData cubeData;
 
-        private VertexArray vertexArray;
-        private VertexArray vertexArrayLamp;
-        private VertexBuffer vertexBuffer;
+        private readonly VertexArray vertexArray;
+        private readonly VertexArray vertexArrayLamp;
+        private readonly VertexBuffer vertexBuffer;
 
-        private Shader lampShader;
-        private Shader shader;
+        private readonly Shader lampShader;
+        private readonly Shader shader;
 
-        private Texture diffuseMap;
-        private Texture specularMap;
+        private readonly Texture diffuseMap;
+        private readonly Texture specularMap;
 
-        private Input input;
+        private readonly Input input;
         // Instance of the camera class to manage the view and projection matrix code.
-        private Camera camera;
-
-        private readonly Vector3 lampPos = new Vector3(1.2f, 1.0f, 2.0f);
+        private readonly Camera camera;
 
         private readonly Vector3[] cubePositions =
         {
@@ -51,8 +49,31 @@ namespace OpenGLEngine
 
         public Application()
         {
-            window = new GameWindow(GameWindowSettings.Default,
-                new NativeWindowSettings() { Size = (800, 600), Title = "First Blood" });
+            window = new GameWindow(
+                GameWindowSettings.Default,
+                new NativeWindowSettings() { Size = (800, 600), Title = "First Blood" }
+            );
+
+            cubeData = new CubeData();
+            renderer = new Renderer();
+            diffuseMap = new Texture();
+            specularMap = new Texture();
+            vertexBuffer = new VertexBuffer(cubeData.Vertices.Length * sizeof(float), cubeData.Vertices);
+            vertexArray = new VertexArray();
+            vertexArrayLamp = new VertexArray();
+            lampShader = new Shader(
+                "src/shaders/shader.vert",
+                "src/shaders/lighting.frag");
+
+            shader = new Shader(
+                "src/shaders/shader.vert",
+                "src/shaders/shader.frag");
+
+            // Initialize the camera so that it is 3 units back from where the rectangle is.
+            camera = new Camera(Vector3.UnitZ * 3, window.Size.X / (float) window.Size.Y, 1.5f, 0.2f);
+            // To make the mouse cursor invisible and captured so to have proper FPS-camera movement.
+            input = new Input(camera, window.KeyboardState, window.MouseState, window.Close);
+
             RegisterEvents();
         }
 
@@ -88,20 +109,20 @@ namespace OpenGLEngine
 
         private void Load()
         {
-            cubeData = new CubeData();
-            renderer = new Renderer();
-            diffuseMap = new Texture("resources/container2.png");
-            specularMap = new Texture("resources/container2_specular.png");
-            vertexBuffer = new VertexBuffer(cubeData.Vertices.Length * sizeof(float), cubeData.Vertices);
+            renderer.Load();
+            vertexBuffer.Load();
 
-            vertexArray = new VertexArray();
+            diffuseMap.LoadFromPath("resources/container2.png");
+            specularMap.LoadFromPath("resources/container2_specular.png");
+
+            vertexArray.Load();
             var layout = new VertexBufferLayout();
             layout.Push(0, 3);
             layout.Push(1, 3);
             layout.Push(2, 2);
             vertexArray.AddBuffer(vertexBuffer, layout);
 
-            vertexArrayLamp = new VertexArray();
+            vertexArrayLamp.Load();
             var lampLayout = new VertexBufferLayout();
             lampLayout.Push(0, 3);
             lampLayout.Push(1, 3);
@@ -109,21 +130,10 @@ namespace OpenGLEngine
 
             vertexArrayLamp.AddBuffer(vertexBuffer, lampLayout);
 
-            lampShader = new Shader(
-                "src/shaders/shader.vert",
-                "src/shaders/lighting.frag");
+            shader.Load();
+            lampShader.Load();
 
-            shader = new Shader(
-                "src/shaders/shader.vert",
-                "src/shaders/shader.frag");
-
-            // Initialize the camera so that it is 3 units back from where the rectangle is.
-            camera = new Camera(Vector3.UnitZ * 3, window.Size.X / (float) window.Size.Y, 1.5f, 0.2f);
-
-            // To make the mouse cursor invisible and captured so to have proper FPS-camera movement.
             window.CursorState = CursorState.Grabbed;
-
-            input = new Input(camera, window.KeyboardState, window.MouseState, window.Close);
         }
 
         private void OnUnload()
