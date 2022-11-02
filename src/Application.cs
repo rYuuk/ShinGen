@@ -5,8 +5,9 @@ using OpenTK.Windowing.Desktop;
 
 namespace OpenGLEngine
 {
-    public class Game : GameWindow
+    public class Application : IDisposable
     {
+        private readonly GameWindow window;
         private Renderer renderer;
         private CubeData cubeData;
 
@@ -48,15 +49,45 @@ namespace OpenGLEngine
             new Vector3(0.0f, 0.0f, -3.0f)
         };
 
-        public Game(int width, int height, string title) :
-            base(GameWindowSettings.Default, new NativeWindowSettings() { Size = (width, height), Title = title })
+        public Application()
         {
+            window = new GameWindow(GameWindowSettings.Default,
+                new NativeWindowSettings() { Size = (800, 600), Title = "First Blood" });
+            RegisterEvents();
         }
 
-        protected override void OnLoad()
+        public void Run()
         {
-            base.OnLoad();
+            window.Run();
+        }
 
+        public void Dispose()
+        {
+            UnRegisterEvents();
+        }
+
+        private void RegisterEvents()
+        {
+            window.Load += Load;
+            window.RenderFrame += OnRender;
+            window.UpdateFrame += Update;
+            window.Unload += OnUnload;
+            window.MouseWheel += OnMouseWheel;
+            window.Resize += OnResize;
+        }
+
+        private void UnRegisterEvents()
+        {
+            window.Load -= Load;
+            window.RenderFrame -= OnRender;
+            window.UpdateFrame -= Update;
+            window.Unload -= OnUnload;
+            window.MouseWheel -= OnMouseWheel;
+            window.Resize -= OnResize;
+        }
+
+        private void Load()
+        {
             cubeData = new CubeData();
             renderer = new Renderer();
             diffuseMap = new Texture("resources/container2.png");
@@ -87,18 +118,16 @@ namespace OpenGLEngine
                 "src/shaders/shader.frag");
 
             // Initialize the camera so that it is 3 units back from where the rectangle is.
-            camera = new Camera(Vector3.UnitZ * 3, Size.X / (float) Size.Y, 1.5f, 0.2f);
+            camera = new Camera(Vector3.UnitZ * 3, window.Size.X / (float) window.Size.Y, 1.5f, 0.2f);
 
             // To make the mouse cursor invisible and captured so to have proper FPS-camera movement.
-            CursorState = CursorState.Grabbed;
+            window.CursorState = CursorState.Grabbed;
 
-            input = new Input();
+            input = new Input(camera, window.KeyboardState, window.MouseState, window.Close);
         }
 
-        protected override void OnUnload()
+        private void OnUnload()
         {
-            Console.WriteLine("UnLoad");
-            base.OnUnload();
             // Unbind all the resources by binding the targets to 0/null.
             vertexBuffer.UnBind();
             vertexArray.UnBind();
@@ -110,11 +139,9 @@ namespace OpenGLEngine
             shader.Dispose();
         }
 
-        protected override void OnRenderFrame(FrameEventArgs args)
+        private void OnRender(FrameEventArgs obj)
         {
-            base.OnRenderFrame(args);
             renderer.Clear();
-
             diffuseMap.Bind();
             specularMap.Bind(1);
 
@@ -126,13 +153,13 @@ namespace OpenGLEngine
             shader.SetInt("material.diffuse", 0);
             shader.SetInt("material.specular", 1);
             shader.SetFloat("material.shininess", 32.0f);
-            
+
             // Directional light
             shader.SetVector3("dirLight.direction", new Vector3(-0.2f, -1.0f, -0.3f));
             shader.SetVector3("dirLight.ambient", new Vector3(0.05f, 0.05f, 0.05f));
             shader.SetVector3("dirLight.diffuse", new Vector3(0.4f, 0.4f, 0.4f));
             shader.SetVector3("dirLight.specular", new Vector3(0.5f, 0.5f, 0.5f));
-            
+
             // Point lights
             for (int i = 0; i < pointLightPositions.Length; i++)
             {
@@ -144,7 +171,7 @@ namespace OpenGLEngine
                 shader.SetFloat($"pointLights[{i}].linear", 0.09f);
                 shader.SetFloat($"pointLights[{i}].quadratic", 0.032f);
             }
-            
+
             // Spot light
             shader.SetVector3("spotLight.position", camera.Position);
             shader.SetVector3("spotLight.direction", camera.Front);
@@ -156,7 +183,7 @@ namespace OpenGLEngine
             shader.SetFloat("spotLight.quadratic", 0.032f);
             shader.SetFloat("spotLight.cutOff", MathF.Cos(MathHelper.DegreesToRadians(12.5f)));
             shader.SetFloat("spotLight.outerCutOff", MathF.Cos(MathHelper.DegreesToRadians(17.5f)));
-            
+
             for (var i = 0; i < cubePositions.Length; i++)
             {
                 Matrix4 model = Matrix4.Identity;
@@ -164,14 +191,14 @@ namespace OpenGLEngine
                 var angle = 20.0f * i;
                 model *= Matrix4.CreateFromAxisAngle(new Vector3(1.0f, 0.3f, 0.5f), angle);
                 shader.SetMatrix4("model", model);
-            
+
                 renderer.Draw(vertexArray, cubeData.Vertices, shader);
             }
-            
+
             lampShader.Bind();
             lampShader.SetMatrix4("view", camera.GetViewMatrix());
             lampShader.SetMatrix4("projection", camera.GetProjectionMatrix());
-            
+
             for (var i = 0; i < pointLightPositions.Length; i++)
             {
                 var lampMatrix = Matrix4.CreateScale(0.2f);
@@ -180,36 +207,30 @@ namespace OpenGLEngine
                 renderer.Draw(vertexArray, cubeData.Vertices, lampShader);
             }
 
-            SwapBuffers();
+            window.SwapBuffers();
         }
 
-        protected override void OnUpdateFrame(FrameEventArgs e)
+        private void Update(FrameEventArgs e)
         {
-            base.OnUpdateFrame(e);
-
-            if (!IsFocused)
+            if (!window.IsFocused)
             {
                 return;
             }
 
-            input.Update(ref camera, KeyboardState, (float) e.Time, MouseState, Close);
+            input.Update((float) e.Time);
         }
 
-        // This manage all the zooming of the camera.
-        // This is simply done by changing the FOV of the camera.
-        protected override void OnMouseWheel(MouseWheelEventArgs e)
+        private void OnMouseWheel(MouseWheelEventArgs e)
         {
-            base.OnMouseWheel(e);
             camera.Fov -= e.OffsetY;
         }
 
-        protected override void OnResize(ResizeEventArgs e)
+        private void OnResize(ResizeEventArgs e)
         {
-            base.OnResize(e);
             GL.Viewport(0, 0, e.Width, e.Height);
 
             // Update the aspect ratio once the window has been resized.
-            camera.AspectRatio = Size.X / (float) Size.Y;
+            camera.AspectRatio = window.Size.X / (float) window.Size.Y;
         }
     }
 }

@@ -5,16 +5,29 @@ namespace OpenGLEngine
 {
     public class Input
     {
+        private readonly Camera camera;
+        private readonly KeyboardState input;
+        private readonly MouseState mouse;
+        private readonly Action closed;
+
         // A boolean set to true to detect whether or not the mouse has been moved for the first time.
         private bool firstMove;
         // The last position of the mouse so we can calculate the mouse offset easily.
         private Vector2 lastPos;
 
-        public void Update(ref Camera camera, KeyboardState input, float deltaTime, MouseState mouse, Action? onClose)
+        public Input(Camera camera, KeyboardState input, MouseState mouse, Action closed)
+        {
+            this.camera = camera;
+            this.input = input;
+            this.mouse = mouse;
+            this.closed = closed;
+        }
+
+        public void Update(float deltaTime)
         {
             if (input.IsKeyDown(Keys.Escape))
             {
-                onClose?.Invoke();
+                closed?.Invoke();
             }
 
             if (input.IsKeyDown(Keys.W))
