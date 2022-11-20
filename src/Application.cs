@@ -13,13 +13,10 @@ namespace OpenGLEngine
 
         private readonly VertexArray vertexArray;
         private readonly VertexArray vertexArrayLamp;
-        private readonly VertexBuffer vertexBuffer;
+        private readonly VertexBuffer<float> vertexBuffer;
 
         private readonly Shader lampShader;
         private readonly Shader shader;
-
-        private readonly Texture diffuseMap;
-        private readonly Texture specularMap;
 
         private readonly Input input;
         // Instance of the camera class to manage the view and projection matrix code.
@@ -47,6 +44,9 @@ namespace OpenGLEngine
             new Vector3(0.0f, 0.0f, -3.0f)
         };
 
+        private Texture diffuseMap;
+        private Texture specularMap;
+
         public Application()
         {
             window = new GameWindow(
@@ -56,9 +56,9 @@ namespace OpenGLEngine
 
             cubeData = new CubeData();
             renderer = new Renderer();
-            diffuseMap = new Texture();
-            specularMap = new Texture();
-            vertexBuffer = new VertexBuffer(cubeData.Vertices.Length * sizeof(float), cubeData.Vertices);
+            diffuseMap = new Texture { Path = "resources/container2.png" };
+            specularMap = new Texture { Path = "resources/container2_specular.png" };
+            vertexBuffer = new VertexBuffer<float>(cubeData.Vertices.Length * sizeof(float), cubeData.Vertices);
             vertexArray = new VertexArray();
             vertexArrayLamp = new VertexArray();
             lampShader = new Shader(
@@ -112,15 +112,15 @@ namespace OpenGLEngine
             renderer.Load();
             vertexBuffer.Load();
 
-            diffuseMap.LoadFromPath("resources/container2.png");
-            specularMap.LoadFromPath("resources/container2_specular.png");
+            diffuseMap.ID = TextureLoader.LoadFromPath(diffuseMap.Path);
+            specularMap.ID = TextureLoader.LoadFromPath(specularMap.Path);
 
-            vertexArray.Load();
+            vertexBuffer.Load();
             var layout = new VertexBufferLayout();
             layout.Push(0, 3);
             layout.Push(1, 3);
             layout.Push(2, 2);
-            vertexArray.AddBuffer(vertexBuffer, layout);
+            vertexArray.AddBuffer(layout);
 
             vertexArrayLamp.Load();
             var lampLayout = new VertexBufferLayout();
@@ -128,7 +128,7 @@ namespace OpenGLEngine
             lampLayout.Push(1, 3);
             lampLayout.Push(2, 2);
 
-            vertexArrayLamp.AddBuffer(vertexBuffer, lampLayout);
+            vertexArrayLamp.AddBuffer(lampLayout);
 
             shader.Load();
             lampShader.Load();
@@ -140,20 +140,23 @@ namespace OpenGLEngine
         {
             // Unbind all the resources by binding the targets to 0/null.
             vertexBuffer.UnBind();
-            vertexArray.UnBind();
+            vertexArray.UnLoad();
             shader.Unbind();
 
             // Delete all the resources.
             vertexBuffer.Dispose();
             vertexArray.Dispose();
             shader.Dispose();
+
+            TextureLoader.Dispose(diffuseMap.ID);
+            TextureLoader.Dispose(specularMap.ID);
         }
 
         private void OnRender(FrameEventArgs obj)
         {
             renderer.Clear();
-            diffuseMap.Bind();
-            specularMap.Bind(1);
+            TextureLoader.LoadSlot(0, diffuseMap.ID);
+            TextureLoader.LoadSlot(1, specularMap.ID);
 
             shader.Bind();
             shader.SetMatrix4("view", camera.GetViewMatrix());

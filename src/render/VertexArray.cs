@@ -4,17 +4,16 @@ namespace OpenGLEngine
 {
     public class VertexArray : IDisposable
     {
-        private int rendererID;
+        private readonly int rendererID;
 
-        public void Load()
+        public VertexArray()
         {
             rendererID = GL.GenVertexArray();
-            GL.BindVertexArray(rendererID);
         }
-
-        public void AddBuffer(VertexBuffer vertexBuffer, VertexBufferLayout layout)
+        
+        public void AddBuffer(VertexBufferLayout layout)
         {
-            Bind();
+            Load();
             List<VertexBufferElement> elements = layout.Elements;
             var offset = 0;
             foreach (VertexBufferElement element in elements)
@@ -31,12 +30,12 @@ namespace OpenGLEngine
             }
         }
 
-        public void Bind()
+        public void Load()
         {
             GL.BindVertexArray(rendererID);
         }
 
-        public void UnBind()
+        public void UnLoad()
         {
             GL.BindVertexArray(0);
         }

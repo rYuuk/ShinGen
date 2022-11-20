@@ -1,20 +1,14 @@
 ﻿using OpenTK.Graphics.OpenGL4;
-using System.Drawing;
-using System.Drawing.Imaging;
-using PixelFormat = OpenTK.Graphics.OpenGL4.PixelFormat;
 using StbImageSharp;
-using System.IO;
 
 namespace OpenGLEngine
 {
     // A helper class, much like Shader, meant to simplify loading textures.
-    public class Texture : IDisposable
+    public static class TextureLoader
     {
-        private int rendererID;
-
-        public void LoadFromPath(string path)
+        public static int LoadFromPath(string path)
         {
-            rendererID = GL.GenTexture();
+            var rendererID = GL.GenTexture();
 
             // Bind the handle
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -45,17 +39,24 @@ namespace OpenGLEngine
             // OpenGL will automatically switch between mipmaps when an object gets sufficiently far away.
             // This prevents moiré effects, as well as saving on texture bandwidth.
             GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+
+            return rendererID;
         }
 
         // Activate texture
+        public static void ActivateSlot(int slot)
+        {
+            GL.ActiveTexture(TextureUnit.Texture0 + slot);
+        }
+        
         // Multiple textures can be bound, if shader needs more than just one.
-        public void Bind(int slot = 0)
+        public static void LoadSlot(int slot, int rendererID)
         {
             GL.ActiveTexture(TextureUnit.Texture0 + slot);
             GL.BindTexture(TextureTarget.Texture2D, rendererID);
         }
 
-        public void Dispose()
+        public static void Dispose(int rendererID)
         {
             GL.DeleteTexture(rendererID);
         }

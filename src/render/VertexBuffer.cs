@@ -1,31 +1,26 @@
-﻿using System.Runtime.InteropServices;
-using OpenTK.Graphics.OpenGL4;
+﻿using OpenTK.Graphics.OpenGL4;
 
 namespace OpenGLEngine
 {
-    public class VertexBuffer : IDisposable
+    public class VertexBuffer<T> : IDisposable where T : struct
     {
         private readonly int size;
-        private readonly float[] data;
+        private readonly T[] data;
 
-        private int rendererID;
+        private readonly int rendererID;
 
-        public VertexBuffer(int size, float[] data)
+        public VertexBuffer(int size, T[] data)
         {
             this.size = size;
             this.data = data;
+            rendererID = GL.GenBuffer();
+
         }
 
         public void Load()
         {
-            rendererID = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, rendererID);
             GL.BufferData(BufferTarget.ArrayBuffer, size, data, BufferUsageHint.StaticDraw);
-        }
-
-        public void Bind()
-        {
-            GL.BindBuffer(BufferTarget.ArrayBuffer, rendererID);
         }
 
         public void UnBind()
