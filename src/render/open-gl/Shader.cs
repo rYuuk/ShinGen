@@ -1,6 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
-using GL = OpenTK.Graphics.OpenGL4.GL;
 
 namespace OpenGLEngine
 {
@@ -109,7 +108,6 @@ namespace OpenGLEngine
             if (success == 0)
             {
                 var infoLog = GL.GetShaderInfoLog(rendererID);
-                Console.WriteLine(infoLog);
             }
 
             GL.DetachShader(rendererID, vertexShader);

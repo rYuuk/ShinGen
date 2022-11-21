@@ -4,54 +4,42 @@ using AiMesh = Assimp.Mesh;
 
 namespace OpenGLEngine
 {
-    public class Model : IDisposable
+    public class ModelImporter
     {
-        private readonly List<Mesh> meshes;
-        private readonly List<MeshRenderer> meshRenderers;
-        private readonly List<Texture> loadedTextures;
-
         private string? directory;
+        private readonly List<Texture> loadedTextures;
+        private readonly List<Mesh> meshes;
 
-        public Model(string path)
+        public ModelImporter()
         {
             meshes = new List<Mesh>();
-            meshRenderers = new List<MeshRenderer>();
             loadedTextures = new List<Texture>();
-            Load(path);
         }
 
-        public void SetupMesh()
-        {
-            foreach (var mesh in meshes)
-            {
-                var meshRender = new MeshRenderer(mesh);
-                meshRender.SetupMesh();
-                meshRenderers.Add(meshRender);
-            }
-        }
-
-        public void Draw(Shader shader, Renderer renderer)
-        {
-            foreach (var meshRenderer in meshRenderers)
-            {
-                meshRenderer.Draw(shader, renderer);
-            }
-        }
-
-        private void Load(string path)
+        public List<Mesh> Import(string path)
         {
             var importer = new AssimpContext();
             var scene = importer.ImportFile(path, PostProcessSteps.Triangulate | PostProcessSteps.FlipUVs);
 
             if (scene == null || scene.SceneFlags == SceneFlags.Incomplete || scene.RootNode == null)
             {
-                return;
+                return new List<Mesh>();
             }
 
             directory = path.Substring(0, path.LastIndexOf('/'));
-            Console.WriteLine(directory);
             ProcessNode(scene.RootNode, scene);
+
+            return meshes;
         }
+
+        public void Dispose()
+        {
+            for (var i = 0; i < loadedTextures.Count; i++)
+            {
+                TextureLoader.Dispose(loadedTextures[i].ID);
+            }
+        }
+
 
         private void ProcessNode(Node rootNode, Scene scene)
         {
@@ -75,11 +63,7 @@ namespace OpenGLEngine
 
             if (mesh.MaterialIndex >= 0)
             {
-                var material = scene.Materials[mesh.MaterialIndex];
-                var diffuseMaps = LoadMaterialTexture(material, TextureType.Diffuse, "texture_diffuse");
-                textures.AddRange(diffuseMaps);
-                var specularMaps = LoadMaterialTexture(material, TextureType.Specular, "texture_specular");
-                textures.AddRange(specularMaps);
+                textures = GetTextures(mesh, scene);
             }
 
             return new Mesh(vertices.ToArray(), indices.ToArray(), textures.ToArray());
@@ -129,6 +113,20 @@ namespace OpenGLEngine
             return indices;
         }
 
+        private List<Texture> GetTextures(AiMesh mesh, Scene scene)
+        {
+            var textures = new List<Texture>();
+            var material = scene.Materials[mesh.MaterialIndex];
+
+            var diffuseMaps = LoadMaterialTexture(material, TextureType.Diffuse, "texture_diffuse");
+            textures.AddRange(diffuseMaps);
+
+            var specularMaps = LoadMaterialTexture(material, TextureType.Specular, "texture_specular");
+            textures.AddRange(specularMaps);
+
+            return textures;
+        }
+
         private List<Texture> LoadMaterialTexture(Material material, TextureType textureType, string typeName)
         {
             var textures = new List<Texture>();
@@ -141,7 +139,6 @@ namespace OpenGLEngine
                 {
                     Texture texture;
                     var path = directory + "\\" + textureSlot.FilePath;
-                    Console.WriteLine("Texture path: " + textureSlot.FilePath);
                     texture.ID = TextureLoader.LoadFromPath(path);
                     texture.Type = typeName;
                     texture.Path = textureSlot.FilePath;
@@ -155,14 +152,6 @@ namespace OpenGLEngine
             }
 
             return textures;
-        }
-
-        public void Dispose()
-        {
-            for (var i = 0; i < loadedTextures.Count; i++)
-            {
-                TextureLoader.Dispose(loadedTextures[i].ID);
-            }
         }
     }
 }
