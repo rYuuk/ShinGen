@@ -5,69 +5,32 @@ using OpenTK.Windowing.Desktop;
 
 namespace OpenGLEngine
 {
-    public class Application : IDisposable
+    public class ModelApplication : IDisposable
     {
         private readonly GameWindow window;
         private readonly Renderer renderer;
-        private readonly CubeData cubeData;
 
-        private readonly VertexArray vertexArray;
-        private readonly VertexArray vertexArrayLamp;
-        private readonly VertexBuffer<float> vertexBuffer;
-
-        private readonly Shader lampShader;
         private readonly Shader shader;
 
         private readonly Input input;
         // Instance of the camera class to manage the view and projection matrix code.
         private readonly Camera camera;
 
-        private readonly Vector3[] cubePositions =
-        {
-            new Vector3(0.0f, 0.0f, 0.0f),
-            new Vector3(2.0f, 5.0f, -15.0f),
-            new Vector3(-1.5f, -2.2f, -2.5f),
-            new Vector3(-3.8f, -2.0f, -12.3f),
-            new Vector3(2.4f, -0.4f, -3.5f),
-            new Vector3(-1.7f, 3.0f, -7.5f),
-            new Vector3(1.3f, -2.0f, -2.5f),
-            new Vector3(1.5f, 2.0f, -2.5f),
-            new Vector3(1.5f, 0.2f, -1.5f),
-            new Vector3(-1.3f, 1.0f, -1.5f)
-        };
+        private Model? model;
 
-        private readonly Vector3[] pointLightPositions =
-        {
-            new Vector3(0.7f, 0.2f, 2.0f),
-            new Vector3(2.3f, -3.3f, -4.0f),
-            new Vector3(-4.0f, 2.0f, -12.0f),
-            new Vector3(0.0f, 0.0f, -3.0f)
-        };
-
-        private Texture diffuseMap;
-        private Texture specularMap;
-
-        public Application()
+        public ModelApplication()
         {
             window = new GameWindow(
                 GameWindowSettings.Default,
-                new NativeWindowSettings() { Size = (800, 600), Title = "First Blood" }
+                new NativeWindowSettings() { Size = (800, 600), Title = "Model Loader" }
             );
 
-            cubeData = new CubeData();
             renderer = new Renderer();
-            diffuseMap = new Texture { Path = "resources/container2.png" };
-            specularMap = new Texture { Path = "resources/container2_specular.png" };
-            vertexBuffer = new VertexBuffer<float>(cubeData.Vertices.Length * sizeof(float), cubeData.Vertices);
-            vertexArray = new VertexArray();
-            vertexArrayLamp = new VertexArray();
-            lampShader = new Shader(
-                "src/shaders/shader.vert",
-                "src/shaders/lighting.frag");
-
+            
             shader = new Shader(
                 "src/shaders/shader.vert",
                 "src/shaders/shader.frag");
+
 
             // Initialize the camera so that it is 3 units back from where the rectangle is.
             camera = new Camera(Vector3.UnitZ * 3, window.Size.X / (float) window.Size.Y, 1.5f, 0.2f);
@@ -110,115 +73,32 @@ namespace OpenGLEngine
         private void Load()
         {
             renderer.Load();
-            vertexBuffer.Load();
-
-            diffuseMap.ID = TextureLoader.LoadFromPath(diffuseMap.Path);
-            specularMap.ID = TextureLoader.LoadFromPath(specularMap.Path);
-
-            vertexBuffer.Load();
-            var layout = new VertexBufferLayout();
-            layout.Push(0, 3);
-            layout.Push(1, 3);
-            layout.Push(2, 2);
-            vertexArray.AddBuffer(layout);
-
-            vertexArrayLamp.Load();
-            var lampLayout = new VertexBufferLayout();
-            lampLayout.Push(0, 3);
-            lampLayout.Push(1, 3);
-            lampLayout.Push(2, 2);
-
-            vertexArrayLamp.AddBuffer(lampLayout);
-
             shader.Load();
-            lampShader.Load();
+            model = new Model("Resources/Backpack/backpack.obj");
+            model.SetupMesh();
 
             window.CursorState = CursorState.Grabbed;
         }
 
         private void OnUnload()
         {
-            // Unbind all the resources by binding the targets to 0/null.
-            vertexBuffer.UnBind();
-            vertexArray.UnLoad();
             shader.Unbind();
-
-            // Delete all the resources.
-            vertexBuffer.Dispose();
-            vertexArray.Dispose();
             shader.Dispose();
-
-            TextureLoader.Dispose(diffuseMap.ID);
-            TextureLoader.Dispose(specularMap.ID);
+            model?.Dispose();
         }
 
         private void OnRender(FrameEventArgs obj)
         {
             renderer.Clear();
-            TextureLoader.LoadSlot(0, diffuseMap.ID);
-            TextureLoader.LoadSlot(1, specularMap.ID);
 
             shader.Bind();
             shader.SetMatrix4("view", camera.GetViewMatrix());
             shader.SetMatrix4("projection", camera.GetProjectionMatrix());
-            shader.SetVector3("viewPos", camera.Position);
 
-            shader.SetInt("material.diffuse", 0);
-            shader.SetInt("material.specular", 1);
-            shader.SetFloat("material.shininess", 32.0f);
-
-            // Directional light
-            shader.SetVector3("dirLight.direction", new Vector3(-0.2f, -1.0f, -0.3f));
-            shader.SetVector3("dirLight.ambient", new Vector3(0.05f, 0.05f, 0.05f));
-            shader.SetVector3("dirLight.diffuse", new Vector3(0.4f, 0.4f, 0.4f));
-            shader.SetVector3("dirLight.specular", new Vector3(0.5f, 0.5f, 0.5f));
-
-            // Point lights
-            for (int i = 0; i < pointLightPositions.Length; i++)
-            {
-                shader.SetVector3($"pointLights[{i}].position", pointLightPositions[i]);
-                shader.SetVector3($"pointLights[{i}].ambient", new Vector3(0.05f, 0.05f, 0.05f));
-                shader.SetVector3($"pointLights[{i}].diffuse", new Vector3(0.8f, 0.8f, 0.8f));
-                shader.SetVector3($"pointLights[{i}].specular", new Vector3(1.0f, 1.0f, 1.0f));
-                shader.SetFloat($"pointLights[{i}].constant", 1.0f);
-                shader.SetFloat($"pointLights[{i}].linear", 0.09f);
-                shader.SetFloat($"pointLights[{i}].quadratic", 0.032f);
-            }
-
-            // Spot light
-            shader.SetVector3("spotLight.position", camera.Position);
-            shader.SetVector3("spotLight.direction", camera.Front);
-            shader.SetVector3("spotLight.ambient", new Vector3(0.0f, 0.0f, 0.0f));
-            shader.SetVector3("spotLight.diffuse", new Vector3(1.0f, 1.0f, 1.0f));
-            shader.SetVector3("spotLight.specular", new Vector3(1.0f, 1.0f, 1.0f));
-            shader.SetFloat("spotLight.constant", 1.0f);
-            shader.SetFloat("spotLight.linear", 0.09f);
-            shader.SetFloat("spotLight.quadratic", 0.032f);
-            shader.SetFloat("spotLight.cutOff", MathF.Cos(MathHelper.DegreesToRadians(12.5f)));
-            shader.SetFloat("spotLight.outerCutOff", MathF.Cos(MathHelper.DegreesToRadians(17.5f)));
-
-            for (var i = 0; i < cubePositions.Length; i++)
-            {
-                Matrix4 model = Matrix4.Identity;
-                model *= Matrix4.CreateTranslation(cubePositions[i]);
-                var angle = 20.0f * i;
-                model *= Matrix4.CreateFromAxisAngle(new Vector3(1.0f, 0.3f, 0.5f), angle);
-                shader.SetMatrix4("model", model);
-
-                renderer.Draw(vertexArray, cubeData.Vertices, shader);
-            }
-
-            lampShader.Bind();
-            lampShader.SetMatrix4("view", camera.GetViewMatrix());
-            lampShader.SetMatrix4("projection", camera.GetProjectionMatrix());
-
-            for (var i = 0; i < pointLightPositions.Length; i++)
-            {
-                var lampMatrix = Matrix4.CreateScale(0.2f);
-                lampMatrix *= Matrix4.CreateTranslation(pointLightPositions[i]);
-                lampShader.SetMatrix4("model", lampMatrix);
-                renderer.Draw(vertexArray, cubeData.Vertices, lampShader);
-            }
+            var modelMatrix = Matrix4.CreateScale(1f);
+            modelMatrix *= Matrix4.CreateTranslation(0.0f, -1.0f, 0.0f);
+            shader.SetMatrix4("model", modelMatrix);
+            model?.Draw(shader, renderer);
 
             window.SwapBuffers();
         }
@@ -231,6 +111,7 @@ namespace OpenGLEngine
             }
 
             input.Update((float) e.Time);
+
         }
 
         private void OnMouseWheel(MouseWheelEventArgs e)

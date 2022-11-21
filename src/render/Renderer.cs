@@ -40,7 +40,7 @@ namespace OpenGLEngine
         {
             vertexArray.Load();
             GL.DrawElements(PrimitiveType.Triangles, size, DrawElementsType.UnsignedInt, 0);
-            
+            vertexArray.UnLoad();
         }
     }
 }

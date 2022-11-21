@@ -11,7 +11,7 @@ namespace OpenGLEngine
             rendererID = GL.GenVertexArray();
         }
         
-        public void AddBuffer(VertexBufferLayout layout)
+        public void AddBufferLayout(VertexBufferLayout layout)
         {
             Load();
             List<VertexBufferElement> elements = layout.Elements;

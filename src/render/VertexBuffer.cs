@@ -14,7 +14,6 @@ namespace OpenGLEngine
             this.size = size;
             this.data = data;
             rendererID = GL.GenBuffer();
-
         }
 
         public void Load()

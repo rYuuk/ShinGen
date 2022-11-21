@@ -1,17 +1,15 @@
 ﻿using Assimp;
-using Assimp.Unmanaged;
-using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using AiMesh = Assimp.Mesh;
 
 namespace OpenGLEngine
 {
-    public class Model
+    public class Model : IDisposable
     {
         private readonly List<Mesh> meshes;
         private readonly List<MeshRenderer> meshRenderers;
         private readonly List<Texture> loadedTextures;
-        
+
         private string? directory;
 
         public Model(string path)
@@ -31,12 +29,12 @@ namespace OpenGLEngine
                 meshRenderers.Add(meshRender);
             }
         }
-        
-        public void Draw(Shader shader)
+
+        public void Draw(Shader shader, Renderer renderer)
         {
             foreach (var meshRenderer in meshRenderers)
             {
-                meshRenderer.Draw(shader);
+                meshRenderer.Draw(shader, renderer);
             }
         }
 
@@ -124,7 +122,7 @@ namespace OpenGLEngine
                 var face = mesh.Faces[i];
                 for (var j = 0; j < face.IndexCount; j++)
                 {
-                    indices.Add((uint)face.Indices[j]);
+                    indices.Add((uint) face.Indices[j]);
                 }
             }
 
@@ -157,6 +155,14 @@ namespace OpenGLEngine
             }
 
             return textures;
+        }
+
+        public void Dispose()
+        {
+            for (var i = 0; i < loadedTextures.Count; i++)
+            {
+                TextureLoader.Dispose(loadedTextures[i].ID);
+            }
         }
     }
 }

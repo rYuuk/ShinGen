@@ -1,14 +1,9 @@
-﻿using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
-
-namespace OpenGLEngine
+﻿namespace OpenGLEngine
 {
     public class MeshRenderer
     {
         private readonly Mesh mesh;
         private readonly VertexArray vertexArray;
-
-        private int VAO, VBO, EBO;
 
         public MeshRenderer(Mesh mesh)
         {
@@ -18,43 +13,24 @@ namespace OpenGLEngine
 
         public void SetupMesh()
         {
-            // var vertexBuffer = new VertexBuffer<Vertex>(Vertex.GetSize() * mesh.Vertices.Count, mesh.Vertices.ToArray());
-            // vertexBuffer.Load();
-            // vertexArray.Load();
+            vertexArray.Load();
 
-            // var layout = new VertexBufferLayout();
-            // layout.Push(0, 3);
-            // layout.Push(1, 3);
-            // layout.Push(2, 2);
-            //
-            // vertexArray.AddBuffer(layout);
-            // vertexArray.UnLoad();
+            var vertexBuffer = new VertexBuffer<Vertex>(Vertex.GetSize() * mesh.Vertices.Length, mesh.Vertices);
+            vertexBuffer.Load();
 
-            VBO = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
-            GL.BufferData(BufferTarget.ArrayBuffer, mesh.Vertices.Length * Vertex.GetSize(), mesh.Vertices.ToArray(), BufferUsageHint.StaticDraw);
-            
-            EBO = GL.GenBuffer();
+            var indexBuffer = new IndexBuffer(mesh.Indices.Length, mesh.Indices);
+            indexBuffer.Load();
 
-            VAO = GL.GenVertexArray();
-            GL.BindVertexArray(VAO);
+            var layout = new VertexBufferLayout();
+            layout.Push(0, 3);
+            layout.Push(1, 3);
+            layout.Push(2, 2);
 
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, EBO);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, mesh.Indices.Length * sizeof(uint), mesh.Indices.ToArray(), BufferUsageHint.StaticDraw);
-
-            GL.VertexAttribPointer(0,3,VertexAttribPointerType.Float,false,Vertex.GetSize(),0);
-            GL.EnableVertexAttribArray(0);
-
-            GL.EnableVertexAttribArray(1);
-            GL.VertexAttribPointer(1,3,VertexAttribPointerType.Float,false,Vertex.GetSize(),Vector3.SizeInBytes);
-            
-            GL.EnableVertexAttribArray(2);
-            GL.VertexAttribPointer(2,2,VertexAttribPointerType.Float,false,Vertex.GetSize(),2*Vector3.SizeInBytes);
-            
-            GL.BindVertexArray(0);
+            vertexArray.AddBufferLayout(layout);
+            vertexArray.UnLoad();
         }
 
-        public void Draw(Shader shader)
+        public void Draw(Shader shader, Renderer renderer)
         {
             var diffuseNr = 1;
             var specularNr = 1;
@@ -81,12 +57,7 @@ namespace OpenGLEngine
             TextureLoader.ActivateSlot(0);
 
             // Draw
-
-            // vertexArray.Load();
-            GL.BindVertexArray(VAO);
-            GL.DrawElements(PrimitiveType.Triangles, mesh.Indices.Length, DrawElementsType.UnsignedInt, 0);
-            GL.BindVertexArray(0);
-            // vertexArray.UnLoad();
+            renderer.Draw(vertexArray, mesh.Indices.Length);
         }
     }
 }
