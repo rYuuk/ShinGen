@@ -1,4 +1,4 @@
-﻿using OpenTK.Mathematics;
+﻿using System.Numerics;
 
 namespace OpenGLEngine
 {
@@ -8,6 +8,12 @@ namespace OpenGLEngine
         public Vector3 Normal;
         public Vector2 TexCoords;
 
-        public static int GetSize() => (2 * Vector3.SizeInBytes) + Vector2.SizeInBytes;
+        public static int GetSize()
+        {
+            unsafe
+            {
+                return 2 * sizeof(Vector3) + sizeof(Vector2);
+            }
+        }
     }
 }

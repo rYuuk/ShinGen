@@ -1,5 +1,5 @@
-﻿using Assimp;
-using OpenTK.Mathematics;
+﻿using System.Numerics;
+using Assimp;
 using AiMesh = Assimp.Mesh;
 
 namespace OpenGLEngine
