@@ -18,6 +18,14 @@ namespace OpenGLEngine
 
         private Model? model;
 
+        private Vector3[] lightPositions = {
+            new Vector3(0.0f, 0.0f, 10.0f)
+        };
+        
+        private Vector3[] lightColors = {
+            new Vector3(150.0f, 150.0f, 150.0f)
+        };
+    
         public ModelApplication()
         {
             window = new GameWindow(
@@ -74,7 +82,10 @@ namespace OpenGLEngine
         {
             renderer.Load();
             shader.Load();
-            model = new Model("Resources/Backpack/backpack.obj");
+            // model = new Model("Resources/Backpack/backpack.obj");
+            // model = new Model("Resources/Duck/Duck.gltf");
+            // model = new Model("Resources/Duck/Duck.glb");
+            model = new Model("Resources/BoomBox/BoomBox.gltf");
             model.SetupMesh();
 
             window.CursorState = CursorState.Grabbed;
@@ -95,7 +106,7 @@ namespace OpenGLEngine
             shader.SetMatrix4("view", camera.GetViewMatrix());
             shader.SetMatrix4("projection", camera.GetProjectionMatrix());
 
-            var modelMatrix = Matrix4.CreateScale(1f);
+            var modelMatrix = Matrix4.CreateScale(10f);
             modelMatrix *= Matrix4.CreateTranslation(0.0f, -1.0f, 0.0f);
             shader.SetMatrix4("model", modelMatrix);
             model?.Draw(shader, renderer);

@@ -10,7 +10,8 @@
         {
             meshRenderers = new List<MeshRenderer>();
             modelImporter = new ModelImporter();
-            meshes = modelImporter.Import(path);
+            // meshes = modelImporter.Import(path);
+            meshes = new GLTFImporter().Import(path);
         }
 
         public void SetupMesh()

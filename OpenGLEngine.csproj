@@ -12,6 +12,7 @@
         <PackageReference Include="AssimpNet" Version="4.1.0" />
         <PackageReference Include="OpenTK" Version="4.7.5" />
         <PackageReference Include="OpenTK.Graphics" Version="4.7.5" />
+        <PackageReference Include="SharpGLTF.Core" Version="1.0.0-alpha0027" />
         <PackageReference Include="StbImageSharp" Version="2.27.13" />
     </ItemGroup>
 
