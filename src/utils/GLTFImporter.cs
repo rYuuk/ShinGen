@@ -1,5 +1,4 @@
-﻿using OpenTK.Mathematics;
-using SharpGLTF.Runtime;
+﻿using SharpGLTF.Runtime;
 using SharpGLTF.Schema2;
 
 namespace OpenGLEngine
@@ -32,15 +31,14 @@ namespace OpenGLEngine
             var vertices = new List<Vertex>();
             var indices = new List<uint>();
 
-            foreach (SharpGLTF.Schema2.Mesh? srcMesh in srcMeshes)
+            foreach (SharpGLTF.Schema2.Mesh srcMesh in srcMeshes)
             {
                 var srcPrims = GetValidPrimitives(srcMesh);
                 foreach (var srcPrim in srcPrims)
                 {
-                    var positions = srcPrim.GetVertexAccessor("POSITION")?.AsVector3Array();
-                    var normals = srcPrim.GetVertexAccessor("NORMAL")?.AsVector3Array();
-                    var texCoord0 = srcPrim.GetVertexAccessor("TEXCOORD_0")?.AsVector2Array();
-
+                    var positions = srcPrim.GetVertexAccessor("POSITION").AsVector3Array();
+                    var normals = srcPrim.GetVertexAccessor("NORMAL").AsVector3Array();
+                    var texCoord0 = srcPrim.GetVertexAccessor("TEXCOORD_0").AsVector2Array();
 
                     vertices.AddRange(positions.Select((t, i) => new Vertex()
                     {
@@ -62,25 +60,50 @@ namespace OpenGLEngine
 
             foreach (Material material in srcModel.LogicalMaterials)
             {
-                Console.WriteLine(material.Name);
                 foreach (var materialChannel in material.Channels)
                 {
                     var srcImage = materialChannel.Texture.PrimaryImage;
-                    var bytes = materialChannel.Texture.PrimaryImage.Content.Content.ToArray();
-                    materialChannel.Texture.PrimaryImage.Content.SaveToFile("Resources/Duck/" + materialChannel.Key + ".png");
+                    // var bytes = materialChannel.Texture.PrimaryImage.Content.Content.ToArray();
+                    // materialChannel.Texture.PrimaryImage.Content.SaveToFile("Resources/Duck/" + materialChannel.Key + ".png");
                     // foreach (var jsonSerializable in materialChannel.Texture.PrimaryImage.Extras.ToJson())
                     // {
-                        // Console.WriteLine(jsonSerializable.ToString());
-                        
+                    // Console.WriteLine(jsonSerializable.ToString());
+
                     // }
-                    var texture = new Texture()
+                    var type = string.Empty;
+                    
+                    if (materialChannel.Key.Contains("BaseColor"))
                     {
-                        ID = TextureLoader.LoadFromPath(srcImage.Content.SourcePath),
-                        // ID = TextureLoader.LoadFromBytes( bytes),
-                        Path = srcImage.Content.SourcePath,
-                        Type = "texture_diffuse"
-                    };
-                    textures.Add(texture);
+                        type = "albedoMap";
+                    }
+                    else if (materialChannel.Key.Contains("Metallic"))
+                    {
+                        type = "metallicMap";
+
+                    }
+                    else if (materialChannel.Key.Contains("Normal"))
+                    {
+                        type = "normalMap";
+                    }
+                    else if (materialChannel.Key.Contains("Occlusion"))
+                    {
+                        type = "aoMap";
+                    }
+                    else if (materialChannel.Key.Contains("Emissive"))
+                    {
+                    }
+
+                    if (!string.IsNullOrEmpty(type))
+                    {
+                        var texture = new Texture()
+                        {
+                            ID = TextureLoader.LoadFromPath(srcImage.Content.SourcePath),
+                            // ID = TextureLoader.LoadFromBytes( bytes),
+                            Path = srcImage.Content.SourcePath,
+                            Type = type
+                        };
+                        textures.Add(texture);
+                    }
                 }
             }
 
@@ -108,10 +131,6 @@ namespace OpenGLEngine
                 }
 
             }
-        }
-
-        void MeshPrimitiveReader(MeshPrimitive srcPrim, bool doubleSided)
-        {
         }
     }
 }

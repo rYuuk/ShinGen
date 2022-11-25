@@ -39,18 +39,17 @@
 
             for (var i = 0; i < mesh.Textures.Length; i++)
             {
-                var number = string.Empty;
                 var name = mesh.Textures[i].Type;
-                number = name switch
-                {
-                    "texture_diffuse" => diffuseNr++.ToString(),
-                    "texture_specular" => specularNr++.ToString(),
-                    "texture_normal" => normalNr++.ToString(),
-                    "texture_height" => heightNr++.ToString(),
-                    _ => number
-                };
+                // number = name switch
+                // {
+                //     "texture_diffuse" => diffuseNr++.ToString(),
+                //     "texture_specular" => specularNr++.ToString(),
+                //     "texture_normal" => normalNr++.ToString(),
+                //     "texture_height" => heightNr++.ToString(),
+                //     _ => number
+                // };
 
-                shader.SetInt(name + number, i);
+                shader.SetInt(name, i);
                 TextureLoader.LoadSlot(i, mesh.Textures[i].ID);
             }
             // Active texture slot 0 again

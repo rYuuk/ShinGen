@@ -17,15 +17,18 @@ namespace OpenGLEngine
         private readonly Camera camera;
 
         private Model? model;
+        private SphereRenderer sphereRenderer;
 
-        private Vector3[] lightPositions = {
-            new Vector3(0.0f, 0.0f, 10.0f)
+        private Vector3[] lightPositions =
+        {
+            new Vector3(0.0f, 0.0f, 8.0f)
         };
-        
-        private Vector3[] lightColors = {
-            new Vector3(150.0f, 150.0f, 150.0f)
+
+        private Vector3[] lightColors =
+        {
+            new Vector3(150.0f, 150.0f, 150.0f),
         };
-    
+
         public ModelApplication()
         {
             window = new GameWindow(
@@ -34,7 +37,7 @@ namespace OpenGLEngine
             );
 
             renderer = new Renderer();
-            
+
             shader = new Shader(
                 "src/shaders/shader.vert",
                 "src/shaders/shader.frag");
@@ -82,12 +85,15 @@ namespace OpenGLEngine
         {
             renderer.Load();
             shader.Load();
+            
             // model = new Model("Resources/Backpack/backpack.obj");
             // model = new Model("Resources/Duck/Duck.gltf");
             // model = new Model("Resources/Duck/Duck.glb");
-            model = new Model("Resources/BoomBox/BoomBox.gltf");
+            model = new Model("Resources/WaterBottle/WaterBottle.gltf");
             model.SetupMesh();
 
+            sphereRenderer = new SphereRenderer();
+            sphereRenderer.SetupMesh();
             window.CursorState = CursorState.Grabbed;
         }
 
@@ -105,10 +111,28 @@ namespace OpenGLEngine
             shader.Bind();
             shader.SetMatrix4("view", camera.GetViewMatrix());
             shader.SetMatrix4("projection", camera.GetProjectionMatrix());
+           
+
 
             var modelMatrix = Matrix4.CreateScale(10f);
-            modelMatrix *= Matrix4.CreateTranslation(0.0f, -1.0f, 0.0f);
+            modelMatrix *= Matrix4.CreateTranslation(0.5f, 0.0f, 3f);
             shader.SetMatrix4("model", modelMatrix);
+
+            for (var i = 0; i < lightPositions.Length; ++i)
+            {
+                var newPos = lightPositions[i] + new Vector3(MathF.Sin((float) obj.Time * 5.0f) * 5.0f, 0.0f, 0.0f);
+                newPos = lightPositions[i];
+                shader.SetVector3("lightPositions[" + i + "]", newPos);
+                shader.SetVector3("lightColors[" + i + "]", lightColors[i]);
+
+                var lightModelMatrix = Matrix4.CreateScale(0.5f);
+                lightModelMatrix *= Matrix4.CreateTranslation(newPos);
+                // shader.SetMatrix4("model", lightModelMatrix);
+                // sphereRenderer.Draw(renderer);
+            }
+            
+           
+
             model?.Draw(shader, renderer);
 
             window.SwapBuffers();
