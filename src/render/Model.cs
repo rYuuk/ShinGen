@@ -5,13 +5,13 @@
         private readonly List<Mesh> meshes;
         private readonly List<MeshRenderer> meshRenderers;
 
-        private readonly ModelImporter modelImporter;
+        private readonly GLTFImporter importer;
+        
         public Model(string path)
         {
             meshRenderers = new List<MeshRenderer>();
-            modelImporter = new ModelImporter();
-            // meshes = modelImporter.Import(path);
-            meshes = new GLTFImporter().Import(path);
+            importer = new GLTFImporter();
+            meshes = importer.Import(path);
         }
 
         public void SetupMesh()
@@ -34,7 +34,7 @@
 
         public void Dispose()
         {
-            modelImporter.Dispose();
+            importer.Dispose();
         }
     }
 }

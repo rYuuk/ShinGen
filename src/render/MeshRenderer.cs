@@ -32,23 +32,9 @@
 
         public void Draw(Shader shader, Renderer renderer)
         {
-            var diffuseNr = 1;
-            var specularNr = 1;
-            var normalNr = 1;
-            var heightNr = 1;
-
             for (var i = 0; i < mesh.Textures.Length; i++)
             {
                 var name = mesh.Textures[i].Type;
-                // number = name switch
-                // {
-                //     "texture_diffuse" => diffuseNr++.ToString(),
-                //     "texture_specular" => specularNr++.ToString(),
-                //     "texture_normal" => normalNr++.ToString(),
-                //     "texture_height" => heightNr++.ToString(),
-                //     _ => number
-                // };
-
                 shader.SetInt(name, i);
                 TextureLoader.LoadSlot(i, mesh.Textures[i].ID);
             }

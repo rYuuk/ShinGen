@@ -8,7 +8,7 @@ in vec3 Normal;
 uniform sampler2D albedoMap;
 uniform sampler2D normalMap;
 uniform sampler2D metallicMap;
-//uniform sampler2D roughnessMap;
+uniform sampler2D roughnessMap;
 uniform sampler2D aoMap;
 
 // lights
@@ -83,9 +83,11 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 void main()
 {
     vec3 albedo     = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
-    float metallic  = texture(metallicMap, TexCoords).r;
-//    float roughness = texture(roughnessMap, TexCoords).r;
-    float roughness = 0.2;
+    float metallic  = texture(
+        metallicMap, TexCoords).r;
+//    float metallic = 0.2;
+    float roughness = texture(roughnessMap, TexCoords).r;
+//    float roughness = 0.2;
     float ao        = texture(aoMap, TexCoords).r;
 
     vec3 N = getNormalFromMap();
@@ -145,5 +147,6 @@ void main()
     // gamma correct
     color = pow(color, vec3(1.0/2.2));
 
+    vec3 acolor = vec3(1,0,0);
     FragColor = vec4(color, 1.0);
 }
