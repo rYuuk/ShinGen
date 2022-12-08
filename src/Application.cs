@@ -10,12 +10,14 @@ namespace OpenGLEngine
         private readonly GameWindow window;
         private readonly Renderer renderer;
 
-        private readonly Shader shader;
-
         private readonly Input input;
         // Instance of the camera class to manage the view and projection matrix code.
         private readonly Camera camera;
 
+        // private readonly CubeRenderer cubeRenderer;
+        private readonly CubemapRenderer cubemapRenderer;
+
+        private readonly Shader shader;
         private Model? model;
 
         private readonly Vector3[] lightPositions =
@@ -32,7 +34,8 @@ namespace OpenGLEngine
         {
             window = new GameWindow(
                 GameWindowSettings.Default,
-                new NativeWindowSettings() { Size = (800, 600), Title = "Model Loader" }
+                new NativeWindowSettings
+                    { Size = (800, 600), Title = "Model Loader" }
             );
 
             renderer = new Renderer();
@@ -41,9 +44,11 @@ namespace OpenGLEngine
                 "src/shaders/shader.vert",
                 "src/shaders/shader.frag");
 
+            // cubeRenderer = new CubeRenderer();
+            cubemapRenderer = new CubemapRenderer();
 
             // Initialize the camera so that it is 3 units back from where the rectangle is.
-            camera = new Camera(Vector3.UnitZ * 3, window.Size.X / (float) window.Size.Y, 1.5f, 0.2f);
+            camera = new Camera(Vector3.UnitZ * 3f, (float) window.Size.X / (float) window.Size.Y, 1f, 0.1f);
             // To make the mouse cursor invisible and captured so to have proper FPS-camera movement.
             input = new Input(camera, window.KeyboardState, window.MouseState, window.Close);
 
@@ -83,8 +88,11 @@ namespace OpenGLEngine
         private void Load()
         {
             renderer.Load();
+            // cubeRenderer.Load();            
+            cubemapRenderer.Load();
+
             shader.Load();
-            
+
             // model = new Model("Resources/Backpack/backpack.obj");
             // model = new Model("Resources/Duck/Duck.gltf");
             // model = new Model("Resources/Duck/Duck.glb");
@@ -109,9 +117,10 @@ namespace OpenGLEngine
             shader.Bind();
             shader.SetMatrix4("view", camera.GetViewMatrix());
             shader.SetMatrix4("projection", camera.GetProjectionMatrix());
+            shader.SetVector3("camPos", camera.Position);
 
             var modelMatrix = Matrix4.CreateScale(1f);
-            modelMatrix *= Matrix4.CreateTranslation(0.5f, 0.0f, 3f);
+            modelMatrix *= Matrix4.CreateTranslation(0.0f, 0.0f, 0f);
             shader.SetMatrix4("model", modelMatrix);
 
             for (var i = 0; i < lightPositions.Length; ++i)
@@ -120,8 +129,12 @@ namespace OpenGLEngine
                 shader.SetVector3("lightPositions[" + i + "]", newPos);
                 shader.SetVector3("lightColors[" + i + "]", lightColors[i]);
             }
-            
+
             model?.Draw(shader, renderer);
+
+            // cubeRenderer.Draw(camera.GetViewMatrix(), camera.GetProjectionMatrix());
+
+            cubemapRenderer.Draw(camera.GetViewMatrix().ClearTranslation(), camera.GetProjectionMatrix());
 
             // draw in wireframe
             // GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
@@ -147,7 +160,7 @@ namespace OpenGLEngine
 
         private void OnResize(ResizeEventArgs e)
         {
-            GL.Viewport(0, 0, e.Width, e.Height);
+            GL.Viewport(0, 0, window.Size.X, window.Size.Y);
 
             // Update the aspect ratio once the window has been resized.
             camera.AspectRatio = window.Size.X / (float) window.Size.Y;

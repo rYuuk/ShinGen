@@ -21,8 +21,9 @@ namespace OpenGLEngine
             // Open a stream to the file and pass it to StbImageSharp to load.
             using (Stream stream = File.OpenRead(path))
             {
-                ImageResult image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
+                var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba,
+                    PixelType.UnsignedByte, image.Data);
             }
 
             // Liner mode means that OpenGL will try to blend pixels, meaning that textures scaled too far will look blurred.
@@ -42,12 +43,34 @@ namespace OpenGLEngine
             return rendererID;
         }
 
+        public static int LoadCubemapFromPaths(string[] facePaths)
+        {
+            var rendererID = GL.GenTexture();
+            GL.BindTexture(TextureTarget.TextureCubeMap, rendererID);
+
+            for (var i = 0; i < facePaths.Length; i++)
+            {
+                using Stream stream = File.OpenRead(facePaths[i]);
+                var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlue);
+                GL.TexImage2D(TextureTarget.TextureCubeMapPositiveX + i, 0, PixelInternalFormat.Rgb, image.Width, image.Height, 0, PixelFormat.Rgb,
+                    PixelType.UnsignedByte, image.Data);
+            }
+            
+            GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Linear);
+            GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Linear);
+            GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS, (int) TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT, (int) TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapR, (int) TextureWrapMode.ClampToEdge);
+
+            return rendererID;
+        }
+
         // Activate texture
         public static void ActivateSlot(int slot)
         {
             GL.ActiveTexture(TextureUnit.Texture0 + slot);
         }
-        
+
         // Multiple textures can be bound, if shader needs more than just one.
         public static void LoadSlot(int slot, int rendererID)
         {

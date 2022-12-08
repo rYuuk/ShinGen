@@ -23,6 +23,9 @@ namespace OpenGLEngine
         // The field of view of the camera (radians)
         private float fov = MathHelper.PiOver2;
 
+        public readonly float Speed;
+        public readonly float Sensitivity;
+
         public Camera(Vector3 position, float aspectRatio, float speed, float sensitivity)
         {
             Position = position;
@@ -30,9 +33,6 @@ namespace OpenGLEngine
             Speed = speed;
             Sensitivity = sensitivity;
         }
-
-        public readonly float Speed;
-        public readonly float Sensitivity;
 
         // The position of the camera
         public Vector3 Position { get; set; }
@@ -91,7 +91,7 @@ namespace OpenGLEngine
         // Get the projection matrix using the CreatePerspectiveFieldOfView function.
         public Matrix4 GetProjectionMatrix()
         {
-            return Matrix4.CreatePerspectiveFieldOfView(fov, AspectRatio, 0.01f, 100f);
+            return Matrix4.CreatePerspectiveFieldOfView(fov, AspectRatio, 0.01f, 1000f);
         }
 
         // This updates the direction vertices.
