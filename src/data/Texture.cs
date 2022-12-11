@@ -2,7 +2,7 @@
 {
     public struct Texture
     {
-        public int ID;
+        public uint ID;
         public string Type;
         public string Path;
 

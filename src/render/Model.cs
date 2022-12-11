@@ -16,19 +16,18 @@
 
         public void SetupMesh()
         {
-            foreach (var mesh in meshes)
+            foreach (var meshRender in meshes.Select(mesh => new MeshRenderer(mesh)))
             {
-                var meshRender = new MeshRenderer(mesh);
                 meshRender.SetupMesh();
                 meshRenderers.Add(meshRender);
             }
         }
 
-        public void Draw(Shader shader, Renderer renderer)
+        public void Draw(Shader shader)
         {
             foreach (var meshRenderer in meshRenderers)
             {
-                meshRenderer.Draw(shader, renderer);
+                meshRenderer.Draw(shader);
             }
         }
 

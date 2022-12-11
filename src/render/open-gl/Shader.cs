@@ -1,20 +1,22 @@
-﻿using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
+﻿using System.Numerics;
+using Silk.NET.OpenGL;
 
 namespace OpenGLEngine
 {
     public class Shader : IDisposable
     {
+        private readonly GL gl;
         private readonly string vertexPath;
         private readonly string fragmentPath;
         
-        private int rendererID;
+        private uint handle;
         private bool disposedValue;
 
         private Dictionary<string, int> uniformLocations;
 
-        public Shader(string vertexPath, string fragmentPath)
+        public Shader(GL gl,string vertexPath, string fragmentPath)
         {
+            this.gl = gl;
             this.vertexPath = vertexPath;
             this.fragmentPath = fragmentPath;
             uniformLocations = new Dictionary<string, int>();
@@ -22,27 +24,39 @@ namespace OpenGLEngine
 
         public void Load()
         {
-            var vertexShader = Compile(ShaderType.VertexShader, vertexPath);
-            var fragmentShader = Compile(ShaderType.FragmentShader, fragmentPath);
-            Create(vertexShader, fragmentShader);
+            var vertex = LoadShader(ShaderType.VertexShader, vertexPath);
+            var fragment = LoadShader(ShaderType.FragmentShader, fragmentPath);
+            handle = gl.CreateProgram();
+            gl.AttachShader(handle, vertex);
+            gl.AttachShader(handle, fragment);
+            gl.LinkProgram(handle);
+            gl.GetProgram(handle, GLEnum.LinkStatus, out var status);
+            if (status == 0)
+            {
+                throw new Exception($"Program failed to link with error: {gl.GetProgramInfoLog(handle)}");
+            }
+            gl.DetachShader(handle, vertex);
+            gl.DetachShader(handle, fragment);
+            gl.DeleteShader(vertex);
+            gl.DeleteShader(fragment);
             CacheUniforms();
         }
 
         public void Bind()
         {
-            GL.UseProgram(rendererID);
+            gl.UseProgram(handle);
         }
 
         public void Unbind()
         {
-            GL.UseProgram(0);
+            gl.UseProgram(0);
         }
 
         public void Dispose()
         {
             if (!disposedValue)
             {
-                GL.DeleteProgram(rendererID);
+                gl.DeleteProgram(handle);
                 disposedValue = true;
             }
             GC.SuppressFinalize(this);
@@ -53,77 +67,55 @@ namespace OpenGLEngine
         // and use this in VertexAttribPointer instead of the hardcoded values.
         public int GetAttribLocation(string attribName)
         {
-            return GL.GetAttribLocation(rendererID, attribName);
+            return gl.GetAttribLocation(handle, attribName);
         }
 
         public void SetInt(string name, int value)
         {
-            GL.Uniform1(uniformLocations[name], value);
+            gl.Uniform1(uniformLocations[name], (uint)value);
         }
 
         public void SetFloat(string name, float value)
         {
-            GL.Uniform1(uniformLocations[name], value);
+            gl.Uniform1(uniformLocations[name], value);
         }
         
         public void SetVector3(string name, Vector3 value)
         {
-            GL.Uniform3(uniformLocations[name], value);
+            gl.Uniform3(uniformLocations[name], value);
         }
 
-        public void SetMatrix4(string name, Matrix4 matrix)
+        public unsafe void SetMatrix4(string name, Matrix4x4 matrix)
         {
             // Transpose determines whether or not the matrices should be transposed.
             // Since OpenTK uses row-major, whereas GLSL typically uses column-major,
             // we will almost always want to use true here.
-            GL.UniformMatrix4(uniformLocations[name], true, ref matrix);
+            gl.UniformMatrix4(uniformLocations[name],1, true, (float*) &matrix);
         }
-
-        private int Compile(ShaderType type, string filePath)
+        
+        private uint LoadShader(ShaderType type, string path)
         {
-            var shaderSource = File.ReadAllText(filePath);
-            var shader = GL.CreateShader(type);
-            GL.ShaderSource(shader, shaderSource);
-
-            GL.CompileShader(shader);
-            GL.GetShader(shader, ShaderParameter.CompileStatus, out var code);
-            if (code == (int) All.True)
-                return shader;
-
-            // Compile failed, get information about the error.
-            var infoLog = GL.GetShaderInfoLog(shader);
-            GL.DeleteShader(shader);
-            throw new Exception($"Error occurred whilst compiling Shader({shader}).\n\n{infoLog}");
-        }
-
-        private void Create(int vertexShader, int fragmentShader)
-        {
-            rendererID = GL.CreateProgram();
-
-            GL.AttachShader(rendererID, vertexShader);
-            GL.AttachShader(rendererID, fragmentShader);
-
-            GL.LinkProgram(rendererID);
-            GL.GetProgram(rendererID, GetProgramParameterName.LinkStatus, out var success);
-            if (success == 0)
+            var src = File.ReadAllText(path);
+            var shaderHandle = gl.CreateShader(type);
+            gl.ShaderSource(shaderHandle, src);
+            gl.CompileShader(shaderHandle);
+            var infoLog = gl.GetShaderInfoLog(shaderHandle);
+            if (!string.IsNullOrWhiteSpace(infoLog))
             {
-                var infoLog = GL.GetShaderInfoLog(rendererID);
+                throw new Exception($"Error compiling shader of type {type}, failed with error {infoLog}");
             }
 
-            GL.DetachShader(rendererID, vertexShader);
-            GL.DetachShader(rendererID, fragmentShader);
-            GL.DeleteShader(fragmentShader);
-            GL.DeleteShader(vertexShader);
+            return shaderHandle;
         }
 
         private void CacheUniforms()
         {
-            GL.GetProgram(rendererID, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
+            gl.GetProgram(handle, GLEnum.ActiveUniforms, out var numberOfUniforms);
             uniformLocations = new Dictionary<string, int>();
             for (var i = 0; i < numberOfUniforms; i++)
             {
-                var key = GL.GetActiveUniform(rendererID, i, out _, out _);
-                var location = GL.GetUniformLocation(rendererID, key);
+                var key = gl.GetActiveUniform(handle, (uint)i, out _, out _);
+                var location = gl.GetUniformLocation(handle, key);
                 uniformLocations.Add(key, location);
             }
         }

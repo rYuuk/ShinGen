@@ -1,4 +1,6 @@
-﻿namespace OpenGLEngine
+﻿using Silk.NET.OpenGL;
+
+namespace OpenGLEngine
 {
     public class MeshRenderer
     {
@@ -8,18 +10,15 @@
         public MeshRenderer(Mesh mesh)
         {
             this.mesh = mesh;
-            vertexArray = new VertexArray();
+            vertexArray = RenderFactory.CreateVertexArray();
         }
 
-        public void SetupMesh()
-        {
+        public  void  SetupMesh()
+       {
             vertexArray.Load();
 
-            var vertexBuffer = new VertexBuffer<Vertex>(Vertex.GetSize() * mesh.Vertices.Length, mesh.Vertices);
-            vertexBuffer.Load();
-
-            var indexBuffer = new IndexBuffer(mesh.Indices.Length, mesh.Indices);
-            indexBuffer.Load();
+            RenderFactory.CreateBufferObject<Vertex>(mesh.Vertices, BufferTargetARB.ArrayBuffer);
+            RenderFactory.CreateBufferObject<uint>(mesh.Indices, BufferTargetARB.ElementArrayBuffer);
 
             var layout = new VertexBufferLayout();
             layout.Push(0, 3);
@@ -30,19 +29,21 @@
             vertexArray.UnLoad();
         }
 
-        public void Draw(Shader shader, Renderer renderer)
+        public void Draw(Shader shader)
         {
             for (var i = 0; i < mesh.Textures.Length; i++)
             {
                 var name = mesh.Textures[i].Type;
                 shader.SetInt(name, i);
-                TextureLoader.LoadSlot(i, mesh.Textures[i].ID);
+                TextureLoader.LoadSlot(mesh.Textures[i].ID, i);
             }
             // Active texture slot 0 again
             TextureLoader.ActivateSlot(0);
 
             // Draw
-            renderer.Draw(vertexArray, mesh.Indices.Length);
+            vertexArray.Load();
+            RenderFactory.DrawElements(mesh.Indices.Length);
+            vertexArray.UnLoad();
         }
     }
 }

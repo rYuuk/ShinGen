@@ -1,5 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
+﻿using System.Numerics;
+using Silk.NET.OpenGL;
 
 namespace OpenGLEngine
 {
@@ -10,8 +10,8 @@ namespace OpenGLEngine
 
         public CubeRenderer()
         {
-            vertexArray = new VertexArray();
-            shader = new Shader(
+            vertexArray = RenderFactory.CreateVertexArray();
+            shader = RenderFactory.CreateShader(
                 "src/shaders/cubeShader.vert",
                 "src/shaders/cubeShader.frag");
         }
@@ -20,29 +20,28 @@ namespace OpenGLEngine
         {
             vertexArray.Load();
 
-            var vertexBuffer = new VertexBuffer<float>(sizeof(float) * VertexData.CubeWithNormalAndTexCoord.Length, VertexData.CubeWithNormalAndTexCoord);
-            vertexBuffer.Load();
+            RenderFactory.CreateBufferObject<float>(VertexData.CubeWithNormalAndTexCoord, BufferTargetARB.ArrayBuffer);
 
             var vertexLayout = new VertexBufferLayout();
-            vertexLayout.Push(0,3);
-            vertexLayout.Push(1,3);
-            vertexLayout.Push(2,2);
+            vertexLayout.Push(0, 3);
+            vertexLayout.Push(1, 3);
+            vertexLayout.Push(2, 2);
 
             vertexArray.AddBufferLayout(vertexLayout);
             vertexArray.UnLoad();
-            
+
             shader.Load();
         }
 
-        public void Draw(Matrix4 view, Matrix4 projection)
+        public void Draw(Matrix4x4 view, Matrix4x4 projection)
         {
             shader.Bind();
-            shader.SetMatrix4("model",  Matrix4.Identity);
+            shader.SetMatrix4("model", Matrix4x4.Identity);
             shader.SetMatrix4("view", view);
             shader.SetMatrix4("projection", projection);
 
             vertexArray.Load();
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            RenderFactory.DrawArrays(36);
             vertexArray.UnLoad();
         }
     }

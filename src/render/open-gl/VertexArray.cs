@@ -1,48 +1,50 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using Silk.NET.OpenGL;
 
 namespace OpenGLEngine
 {
     public class VertexArray : IDisposable
     {
-        private readonly int rendererID;
+        private readonly GL gl;
+        private readonly uint handle;
 
-        public VertexArray()
+        public VertexArray(GL gl)
         {
-            rendererID = GL.GenVertexArray();
+            this.gl = gl;
+            handle = gl.GenVertexArray();
         }
         
-        public void AddBufferLayout(VertexBufferLayout layout)
+        public unsafe void AddBufferLayout(VertexBufferLayout layout)
         {
             Load();
-            List<VertexBufferElement> elements = layout.Elements;
+            var elements = layout.Elements;
             var offset = 0;
-            foreach (VertexBufferElement element in elements)
+            foreach (var element in elements)
             {
-                GL.EnableVertexAttribArray(element.Index);
-                GL.VertexAttribPointer(
-                    element.Index,
+                gl.EnableVertexAttribArray((uint)element.Index);
+                gl.VertexAttribPointer(
+                    (uint)element.Index,
                     element.Count,
                     element.Type,
                     element.Normalized,
-                    layout.Stride,
-                    offset);
+                    (uint)layout.Stride,
+                    (void*)offset);
                 offset += element.Count * VertexBufferElement.GetSizeOfType(element.Type);
             }
         }
 
         public void Load()
         {
-            GL.BindVertexArray(rendererID);
+            gl.BindVertexArray(handle);
         }
 
         public void UnLoad()
         {
-            GL.BindVertexArray(0);
+            gl.BindVertexArray(0);
         }
 
         public void Dispose()
         {
-            GL.DeleteVertexArray(rendererID);
+            gl.DeleteVertexArray(handle);
         }
     }
 }

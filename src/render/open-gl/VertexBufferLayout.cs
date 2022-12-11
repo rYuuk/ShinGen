@@ -1,21 +1,21 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using Silk.NET.OpenGL;
 
 namespace OpenGLEngine
 {
     public struct VertexBufferElement
     {
         public int Index;
-        public VertexAttribPointerType Type;
+        public GLEnum Type;
         public int Count;
         public bool Normalized;
 
-        public static int GetSizeOfType(VertexAttribPointerType type)
+        public static int GetSizeOfType(GLEnum type)
         {
             return type switch
             {
-                VertexAttribPointerType.Float => sizeof(float),
-                VertexAttribPointerType.Int => sizeof(int),
-                VertexAttribPointerType.Byte => sizeof(byte),
+                GLEnum.Float => sizeof(float),
+                GLEnum.Int => sizeof(int),
+                GLEnum.Byte => sizeof(byte),
                 _ => 0
             };
         }
@@ -37,11 +37,11 @@ namespace OpenGLEngine
             Elements.Add(new VertexBufferElement()
             {
                 Index = index,
-                Type = VertexAttribPointerType.Float,
+                Type = GLEnum.Float,
                 Count = count,
                 Normalized = false
             });
-            Stride += count * VertexBufferElement.GetSizeOfType(VertexAttribPointerType.Float);
+            Stride += count * VertexBufferElement.GetSizeOfType(GLEnum.Float);
         }
     }
 }

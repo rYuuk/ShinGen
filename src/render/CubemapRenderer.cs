@@ -1,5 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
+﻿using System.Numerics;
+using Silk.NET.OpenGL;
 
 namespace OpenGLEngine
 {
@@ -18,12 +18,12 @@ namespace OpenGLEngine
         private readonly VertexArray vertexArray;
         private readonly Shader shader;
 
-        private int textureID;
+        private uint textureID;
 
         public CubemapRenderer()
         {
-            vertexArray = new VertexArray();
-            shader = new Shader(
+            vertexArray = RenderFactory.CreateVertexArray();
+            shader = RenderFactory.CreateShader(
                 "src/shaders/cubemap.vert",
                 "src/shaders/cubemap.frag");
         }
@@ -32,13 +32,13 @@ namespace OpenGLEngine
         {
             vertexArray.Load();
 
-            var vertexBuffer = new VertexBuffer<float>(sizeof(float) * VertexData.Skybox.Length, VertexData.Skybox);
-            vertexBuffer.Load();
+            RenderFactory.CreateBufferObject<float>(VertexData.Skybox, BufferTargetARB.ArrayBuffer);
 
             var vertexLayout = new VertexBufferLayout();
             vertexLayout.Push(0, 3);
 
             vertexArray.AddBufferLayout(vertexLayout);
+            vertexArray.UnLoad();
 
             shader.Load();
             shader.SetInt("skybox", 0);
@@ -46,21 +46,18 @@ namespace OpenGLEngine
             textureID = TextureLoader.LoadCubemapFromPaths(cubeMapFaceTextures.Select(x => "Resources/Skybox/" + x).ToArray());
         }
 
-        public void Draw(Matrix4 view, Matrix4 projection)
+        public void Draw(Matrix4x4 view, Matrix4x4 projection)
         {
-            GL.DepthFunc(DepthFunction.Lequal);
             shader.Bind();
             shader.SetMatrix4("view", view);
             shader.SetMatrix4("projection", projection);
 
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.TextureCubeMap, textureID);
+            TextureLoader.LoadSlot(textureID, 0);
 
             vertexArray.Load();
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            RenderFactory.DrawArrays(36);
             vertexArray.UnLoad();
 
-            GL.DepthFunc(DepthFunction.Less);
         }
     }
 }

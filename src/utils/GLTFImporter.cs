@@ -1,7 +1,9 @@
-﻿using SharpGLTF.Runtime;
+﻿using Assimp;
+using SharpGLTF.Runtime;
 using SharpGLTF.Schema2;
 using GLTFMesh = SharpGLTF.Schema2.Mesh;
 using GLTFMaterial = SharpGLTF.Schema2.Material;
+using PrimitiveType = SharpGLTF.Schema2.PrimitiveType;
 
 namespace OpenGLEngine
 {
@@ -33,7 +35,9 @@ namespace OpenGLEngine
                     var positions = gltfMeshPrim.GetVertexAccessor("POSITION").AsVector3Array();
                     var normals = gltfMeshPrim.GetVertexAccessor("NORMAL").AsVector3Array();
                     var texCoord0 = gltfMeshPrim.GetVertexAccessor("TEXCOORD_0").AsVector2Array();
-
+                    var tangents = gltfMeshPrim.GetVertexAccessor("TANGENT")?.AsVector4Array();
+                    var color0 = gltfMeshPrim.GetVertexAccessor("COLOR_0")?.AsColorArray();
+                    
                     vertices.AddRange(positions.Select((t, i) => new Vertex()
                     {
                         Position = t,
@@ -70,6 +74,12 @@ namespace OpenGLEngine
 
         private IEnumerable<GLTFMesh> GetMeshes(string path)
         {
+            var importer = new AssimpContext();
+             var scene = importer.ImportFile(path, PostProcessSteps.Triangulate | PostProcessSteps.FlipUVs);
+             Console.WriteLine(scene.Meshes[0].Vertices.Count);
+             Console.WriteLine(scene.Materials[0].Name);
+             // Console.WriteLine(scene.Materials[0].GetMaterialTexture());
+
             var srcModel = ModelRoot.Load(path);
 
             var templates = srcModel.LogicalScenes
@@ -90,16 +100,18 @@ namespace OpenGLEngine
             var textures = new List<Texture>();
             foreach (var materialChannel in gltfMaterial.Channels)
             {
+                var param = materialChannel.Parameters.Aggregate(string.Empty,
+                    (current, parameter) => current + (parameter.Name + " " + parameter.Value + ","));
+
+                Console.WriteLine(materialChannel.Key + " : " + param);
                 if (materialChannel.Texture == null)
                 {
                     continue;
                 }
-                var param = materialChannel.Parameters.Aggregate(string.Empty,
-                    (current, parameter) => current + (parameter.Name + " " + parameter.Value + ","));
-
+              
                 var extension = materialChannel.Texture.PrimaryImage.Content.IsJpg ? ".jpg" : ".png";
                 var texturePath = directory + "/" + meshName + "_" + materialChannel.Key + extension;
-                Console.WriteLine(meshName + " " + materialChannel.Key + ", " + param + " " + texturePath);
+                Console.WriteLine(meshName + " " + materialChannel.Key + ", " + texturePath);
 
                 if (!File.Exists(texturePath))
                 {

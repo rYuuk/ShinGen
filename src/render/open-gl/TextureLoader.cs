@@ -1,86 +1,128 @@
-﻿using OpenTK.Graphics.OpenGL4;
-using StbImageSharp;
+﻿using Silk.NET.OpenGL;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace OpenGLEngine
 {
-    // A helper class, much like Shader, meant to simplify loading textures.
+    // A helper class, meant to simplify loading textures.
     public static class TextureLoader
     {
-        public static int LoadFromPath(string path)
+        private static GL gl = null!;
+
+        public static void Init(GL library)
         {
-            var rendererID = GL.GenTexture();
-
-            // Bind the handle
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, rendererID);
-
-            // OpenGL has it's texture origin in the lower left corner instead of the top left corner,
-            // so StbImageSharp will to flip the image when loading.
-            StbImage.stbi_set_flip_vertically_on_load(1);
-
-            // Open a stream to the file and pass it to StbImageSharp to load.
-            using (Stream stream = File.OpenRead(path))
-            {
-                var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba,
-                    PixelType.UnsignedByte, image.Data);
-            }
-
-            // Liner mode means that OpenGL will try to blend pixels, meaning that textures scaled too far will look blurred.
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Linear);
-
-            // Set the wrapping mode. S is for the X axis, and T is for the Y axis.
-            // This is set to Repeat which will repeat the textures when wrapped.
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
-
-            // Generate mipmaps.
-            // OpenGL will automatically switch between mipmaps when an object gets sufficiently far away.
-            // This prevents moiré effects, as well as saving on texture bandwidth.
-            GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-
-            return rendererID;
+            gl = library;
         }
 
-        public static int LoadCubemapFromPaths(string[] facePaths)
+        public static unsafe uint LoadFromPath(string path)
         {
-            var rendererID = GL.GenTexture();
-            GL.BindTexture(TextureTarget.TextureCubeMap, rendererID);
+            var handle = gl.GenTexture();
+
+            // Bind the handle
+            gl.ActiveTexture(TextureUnit.Texture0);
+            gl.BindTexture(TextureTarget.Texture2D, handle);
+
+            using (var img = Image.Load<Rgba32>(path))
+            {
+                gl.TexImage2D(
+                    TextureTarget.Texture2D, 
+                    0, 
+                    InternalFormat.Rgba8, 
+                    (uint) img.Width, 
+                    (uint) img.Height,
+                    0, 
+                    PixelFormat.Rgba,
+                    PixelType.UnsignedByte,
+                    null);
+
+                img.ProcessPixelRows(accessor =>
+                {
+                    for (var y = 0; y < accessor.Height; y++)
+                    {
+                        fixed (void* data = accessor.GetRowSpan(y))
+                        {
+                            gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, y, (uint) accessor.Width, 1, PixelFormat.Rgba, PixelType.UnsignedByte, data);
+                        }
+                    }
+                });
+            }
+
+            SetParameters();
+            return handle;
+        }
+
+        public static unsafe uint LoadCubemapFromPaths(string[] facePaths)
+        {
+            var handle = gl.GenTexture();
+            gl.BindTexture(TextureTarget.TextureCubeMap, handle);
 
             for (var i = 0; i < facePaths.Length; i++)
             {
-                using Stream stream = File.OpenRead(facePaths[i]);
-                var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlue);
-                GL.TexImage2D(TextureTarget.TextureCubeMapPositiveX + i, 0, PixelInternalFormat.Rgb, image.Width, image.Height, 0, PixelFormat.Rgb,
-                    PixelType.UnsignedByte, image.Data);
-            }
-            
-            GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Linear);
-            GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Linear);
-            GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS, (int) TextureWrapMode.ClampToEdge);
-            GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT, (int) TextureWrapMode.ClampToEdge);
-            GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapR, (int) TextureWrapMode.ClampToEdge);
+                using var img = Image.Load<Rgba32>(facePaths[i]);
+                gl.TexImage2D(
+                    TextureTarget.TextureCubeMapPositiveX + i,
+                    0, 
+                    InternalFormat.Rgba8, 
+                    (uint) img.Width, 
+                    (uint) img.Height, 
+                    0, 
+                    PixelFormat.Rgba, 
+                    PixelType.UnsignedByte, 
+                    null);
 
-            return rendererID;
+                img.ProcessPixelRows(accessor =>
+                {
+                    for (var y = 0; y < accessor.Height; y++)
+                    {
+                        fixed (void* data = accessor.GetRowSpan(y))
+                        {
+                            gl.TexSubImage2D(TextureTarget.TextureCubeMapPositiveX + i, 
+                                0, 0, y, 
+                                (uint) accessor.Width, 
+                                1, 
+                                PixelFormat.Rgba, 
+                                PixelType.UnsignedByte, 
+                                data);
+                        }
+                    }
+                });
+            }
+
+            gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Linear);
+            gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Linear);
+            gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS, (int) TextureWrapMode.ClampToEdge);
+            gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT, (int) TextureWrapMode.ClampToEdge);
+            gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapR, (int) TextureWrapMode.ClampToEdge);
+
+            return handle;
         }
 
-        // Activate texture
         public static void ActivateSlot(int slot)
         {
-            GL.ActiveTexture(TextureUnit.Texture0 + slot);
+            gl.ActiveTexture(TextureUnit.Texture0 + slot);
         }
 
         // Multiple textures can be bound, if shader needs more than just one.
-        public static void LoadSlot(int slot, int rendererID)
+        public static void LoadSlot(uint handle, int slot)
         {
-            GL.ActiveTexture(TextureUnit.Texture0 + slot);
-            GL.BindTexture(TextureTarget.Texture2D, rendererID);
+            gl.ActiveTexture(TextureUnit.Texture0 + slot);
+            gl.BindTexture(TextureTarget.Texture2D, handle);
         }
 
-        public static void Dispose(int rendererID)
+        public static void Dispose(uint handle)
         {
-            GL.DeleteTexture(rendererID);
+            gl.DeleteTexture(handle);
+        }
+        
+        private static void SetParameters()
+        {
+            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
+            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
+            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Linear);
+            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int) TextureMinFilter.Linear);
+            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, 0);
+            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, 8);
+            gl.GenerateMipmap(TextureTarget.Texture2D);
         }
     }
 }

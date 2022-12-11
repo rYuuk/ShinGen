@@ -1,4 +1,4 @@
-﻿using OpenTK.Mathematics;
+﻿using System.Numerics;
 
 namespace OpenGLEngine
 {
@@ -53,7 +53,7 @@ namespace OpenGLEngine
             set
             {
                 // Clamp the pitch value between -89 and 89 to prevent the camera from going upside down.
-                var angle = MathHelper.Clamp(value, -89f, 89f);
+                var angle = Math.Clamp(value, -89f, 89f);
                 pitch = MathHelper.DegreesToRadians(angle);
                 UpdateVectors();
             }
@@ -77,21 +77,21 @@ namespace OpenGLEngine
             get => MathHelper.RadiansToDegrees(fov);
             set
             {
-                var angle = MathHelper.Clamp(value, 1f, 90f);
+                var angle = Math.Clamp(value, 1f, 90f);
                 fov = MathHelper.DegreesToRadians(angle);
             }
         }
 
         // Get the view matrix using the LookAt function
-        public Matrix4 GetViewMatrix()
+        public Matrix4x4 GetViewMatrix()
         {
-            return Matrix4.LookAt(Position, Position + front, up);
+            return Matrix4x4.CreateLookAt(Position, Position + front, up);
         }
 
         // Get the projection matrix using the CreatePerspectiveFieldOfView function.
-        public Matrix4 GetProjectionMatrix()
+        public Matrix4x4 GetProjectionMatrix()
         {
-            return Matrix4.CreatePerspectiveFieldOfView(fov, AspectRatio, 0.01f, 1000f);
+            return Matrix4x4.CreatePerspectiveFieldOfView(fov, AspectRatio, 0.01f, 1000f);
         }
 
         // This updates the direction vertices.

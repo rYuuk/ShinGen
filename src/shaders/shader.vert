@@ -14,7 +14,7 @@ out vec3 Normal;
 
 void main(void)
 {
-    TexCoords =  vec2(aTexCoords.s, 1.0 - aTexCoords.t);;
+    TexCoords =  aTexCoords;
     WorldPos = vec3(model * vec4(aPosition, 1.0));
     Normal = mat3(model) * aNormal;
 
