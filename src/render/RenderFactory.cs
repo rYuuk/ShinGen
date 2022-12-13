@@ -16,7 +16,7 @@ namespace OpenGLEngine
         public static VertexArray CreateVertexArray()
             => new VertexArray(gl);
 
-        public static void CreateBufferObject<T>(Span<T> data, BufferTargetARB bufferType) where T : unmanaged
+        public static BufferObject<T> CreateBufferObject<T>(Span<T> data, BufferTargetARB bufferType) where T : unmanaged
             => new BufferObject<T>(gl, data, bufferType);
 
         public static Shader CreateShader(string vertexPath, string fragmentPath)

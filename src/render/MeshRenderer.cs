@@ -2,10 +2,13 @@
 
 namespace OpenGLEngine
 {
-    public class MeshRenderer
+    public class MeshRenderer : IDisposable
     {
         private readonly Mesh mesh;
         private readonly VertexArray vertexArray;
+
+        private BufferObject<Vertex> vertexBufferObject = null!;
+        private BufferObject<uint> elementBufferObject = null!;
 
         public MeshRenderer(Mesh mesh)
         {
@@ -13,12 +16,12 @@ namespace OpenGLEngine
             vertexArray = RenderFactory.CreateVertexArray();
         }
 
-        public  void  SetupMesh()
-       {
+        public void SetupMesh()
+        {
             vertexArray.Load();
 
-            RenderFactory.CreateBufferObject<Vertex>(mesh.Vertices, BufferTargetARB.ArrayBuffer);
-            RenderFactory.CreateBufferObject<uint>(mesh.Indices, BufferTargetARB.ElementArrayBuffer);
+            vertexBufferObject = RenderFactory.CreateBufferObject<Vertex>(mesh.Vertices, BufferTargetARB.ArrayBuffer);
+            elementBufferObject = RenderFactory.CreateBufferObject<uint>(mesh.Indices, BufferTargetARB.ElementArrayBuffer);
 
             var layout = new VertexBufferLayout();
             layout.Push(0, 3);
@@ -44,6 +47,13 @@ namespace OpenGLEngine
             vertexArray.Load();
             RenderFactory.DrawElements(mesh.Indices.Length);
             vertexArray.UnLoad();
+        }
+
+        public void Dispose()
+        {
+            vertexArray.Dispose();
+            vertexBufferObject.Dispose();
+            elementBufferObject.Dispose();
         }
     }
 }

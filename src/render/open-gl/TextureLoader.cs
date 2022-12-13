@@ -9,12 +9,10 @@ namespace OpenGLEngine
     {
         private static GL gl = null!;
 
-        public static void Init(GL library)
-        {
+        public static void Init(GL library) =>
             gl = library;
-        }
 
-        public static unsafe uint LoadFromPath(string path)
+        public static uint LoadFromPath(string path)
         {
             var handle = gl.GenTexture();
 
@@ -22,15 +20,17 @@ namespace OpenGLEngine
             gl.ActiveTexture(TextureUnit.Texture0);
             gl.BindTexture(TextureTarget.Texture2D, handle);
 
-            using (var img = Image.Load<Rgba32>(path))
+            unsafe
             {
+                Console.WriteLine(path);
+                using var img = Image.Load<Rgba32>(path);
                 gl.TexImage2D(
-                    TextureTarget.Texture2D, 
-                    0, 
-                    InternalFormat.Rgba8, 
-                    (uint) img.Width, 
+                    TextureTarget.Texture2D,
+                    0,
+                    InternalFormat.Rgba8,
+                    (uint) img.Width,
                     (uint) img.Height,
-                    0, 
+                    0,
                     PixelFormat.Rgba,
                     PixelType.UnsignedByte,
                     null);
@@ -41,33 +41,38 @@ namespace OpenGLEngine
                     {
                         fixed (void* data = accessor.GetRowSpan(y))
                         {
-                            gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, y, (uint) accessor.Width, 1, PixelFormat.Rgba, PixelType.UnsignedByte, data);
+                            gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, y, (uint) accessor.Width, 1, PixelFormat.Rgba, PixelType.UnsignedByte,
+                                data);
                         }
                     }
                 });
+
             }
 
             SetParameters();
             return handle;
         }
 
-        public static unsafe uint LoadCubemapFromPaths(string[] facePaths)
+        public static uint LoadFromPath(byte[] bytes)
         {
             var handle = gl.GenTexture();
-            gl.BindTexture(TextureTarget.TextureCubeMap, handle);
 
-            for (var i = 0; i < facePaths.Length; i++)
+            // Bind the handle
+            gl.ActiveTexture(TextureUnit.Texture0);
+            gl.BindTexture(TextureTarget.Texture2D, handle);
+
+            unsafe
             {
-                using var img = Image.Load<Rgba32>(facePaths[i]);
+                using var img = Image.Load<Rgba32>(bytes);
                 gl.TexImage2D(
-                    TextureTarget.TextureCubeMapPositiveX + i,
-                    0, 
-                    InternalFormat.Rgba8, 
-                    (uint) img.Width, 
-                    (uint) img.Height, 
-                    0, 
-                    PixelFormat.Rgba, 
-                    PixelType.UnsignedByte, 
+                    TextureTarget.Texture2D,
+                    0,
+                    InternalFormat.Rgba8,
+                    (uint) img.Width,
+                    (uint) img.Height,
+                    0,
+                    PixelFormat.Rgba,
+                    PixelType.UnsignedByte,
                     null);
 
                 img.ProcessPixelRows(accessor =>
@@ -76,16 +81,56 @@ namespace OpenGLEngine
                     {
                         fixed (void* data = accessor.GetRowSpan(y))
                         {
-                            gl.TexSubImage2D(TextureTarget.TextureCubeMapPositiveX + i, 
-                                0, 0, y, 
-                                (uint) accessor.Width, 
-                                1, 
-                                PixelFormat.Rgba, 
-                                PixelType.UnsignedByte, 
+                            gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, y, (uint) accessor.Width, 1, PixelFormat.Rgba, PixelType.UnsignedByte,
                                 data);
                         }
                     }
                 });
+
+            }
+
+            SetParameters();
+            return handle;
+        }
+
+        public static uint LoadCubemapFromPaths(string[] facePaths)
+        {
+            var handle = gl.GenTexture();
+            gl.BindTexture(TextureTarget.TextureCubeMap, handle);
+
+            unsafe
+            {
+                for (var i = 0; i < facePaths.Length; i++)
+                {
+                    using var img = Image.Load<Rgba32>(facePaths[i]);
+                    gl.TexImage2D(
+                        TextureTarget.TextureCubeMapPositiveX + i,
+                        0,
+                        InternalFormat.Rgba8,
+                        (uint) img.Width,
+                        (uint) img.Height,
+                        0,
+                        PixelFormat.Rgba,
+                        PixelType.UnsignedByte,
+                        null);
+
+                    img.ProcessPixelRows(accessor =>
+                    {
+                        for (var y = 0; y < accessor.Height; y++)
+                        {
+                            fixed (void* data = accessor.GetRowSpan(y))
+                            {
+                                gl.TexSubImage2D(TextureTarget.TextureCubeMapPositiveX + i,
+                                    0, 0, y,
+                                    (uint) accessor.Width,
+                                    1,
+                                    PixelFormat.Rgba,
+                                    PixelType.UnsignedByte,
+                                    data);
+                            }
+                        }
+                    });
+                }
             }
 
             gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Linear);
@@ -97,10 +142,8 @@ namespace OpenGLEngine
             return handle;
         }
 
-        public static void ActivateSlot(int slot)
-        {
+        public static void ActivateSlot(int slot) =>
             gl.ActiveTexture(TextureUnit.Texture0 + slot);
-        }
 
         // Multiple textures can be bound, if shader needs more than just one.
         public static void LoadSlot(uint handle, int slot)
@@ -109,11 +152,9 @@ namespace OpenGLEngine
             gl.BindTexture(TextureTarget.Texture2D, handle);
         }
 
-        public static void Dispose(uint handle)
-        {
+        public static void Dispose(uint handle) =>
             gl.DeleteTexture(handle);
-        }
-        
+
         private static void SetParameters()
         {
             gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
