@@ -29,8 +29,6 @@ namespace OpenGLEngine
 
             vertexArray.AddBufferLayout(vertexLayout);
             vertexArray.UnLoad();
-
-            shader.Load();
         }
 
         public void Draw(Matrix4x4 view, Matrix4x4 projection)

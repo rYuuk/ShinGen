@@ -91,7 +91,7 @@ namespace OpenGLEngine
         // Get the projection matrix using the CreatePerspectiveFieldOfView function.
         public Matrix4x4 GetProjectionMatrix()
         {
-            return Matrix4x4.CreatePerspectiveFieldOfView(fov, AspectRatio, 0.01f, 1000f);
+            return Matrix4x4.CreatePerspectiveFieldOfView(fov, AspectRatio, 0.01f, 100f);
         }
 
         // This updates the direction vertices.

@@ -40,7 +40,6 @@ namespace OpenGLEngine
             vertexArray.AddBufferLayout(vertexLayout);
             vertexArray.UnLoad();
 
-            shader.Load();
             shader.SetInt("skybox", 0);
 
             textureID = TextureLoader.LoadCubemapFromPaths(cubeMapFaceTextures.Select(x => "Resources/Skybox/" + x).ToArray());

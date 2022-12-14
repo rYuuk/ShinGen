@@ -9,7 +9,7 @@
         
         public void Load()
         {
-            ID = TextureLoader.LoadFromPath(Bytes);
+            ID = TextureLoader.LoadFromBytes(Bytes);
         }
     }
 }

@@ -40,8 +40,6 @@ namespace OpenGLEngine
                 shader.SetInt(name, i);
                 TextureLoader.LoadSlot(mesh.Textures[i].ID, i);
             }
-            // Active texture slot 0 again
-            TextureLoader.ActivateSlot(0);
 
             // Draw
             vertexArray.Load();

@@ -9,23 +9,22 @@ namespace OpenGLEngine
     public class ModelApplication : IDisposable
     {
         private readonly IWindow window;
-        private RenderHelper renderHelper;
 
         private static GL gl = null!;
 
-        private Input input;
+        private Input input = null!;
         // Instance of the camera class to manage the view and projection matrix code.
-        private Camera camera;
+        private Camera camera = null!;
 
-        private CubeRenderer cubeRenderer;
-        private CubemapRenderer cubemapRenderer;
+        private CubeRenderer cubeRenderer = null!;
+        private CubemapRenderer cubemapRenderer = null!;
 
-        private Shader shader;
-        private Model model;
+        private Shader shader = null!;
+        private Model model = null!;
 
         private readonly Vector3[] lightPositions =
         {
-            new Vector3(0.0f, 0.0f, 8.0f)
+            new Vector3(0.0f, 0.0f, 10.0f)
         };
 
         private readonly Vector3[] lightColors =
@@ -38,17 +37,17 @@ namespace OpenGLEngine
         public ModelApplication()
         {
             var options = WindowOptions.Default;
-            options.Size = new Vector2D<int>(800, 600);
+            options.Size = new Vector2D<int>(1280, 720);
             options.Title = "OpenGLEngine";
+            options.Samples = 4;
+
             window = Window.Create(options);
             RegisterEvents();
             window.Run();
         }
 
-        public void Dispose()
-        {
+        public void Dispose() =>
             UnRegisterEvents();
-        }
 
         private void RegisterEvents()
         {
@@ -67,18 +66,21 @@ namespace OpenGLEngine
             window.Update -= OnUpdate;
             window.Closing -= OnUnload;
             window.Resize -= OnResize;
+            window.FocusChanged -= OnFocusChanged;
         }
 
         private void OnLoad()
         {
             gl = GL.GetApi(window);
-
+            
             var windowInput = window.CreateInput();
 
+            RenderHelper.SetRenderer(gl);
             RenderFactory.SetRenderer(gl);
-            renderHelper = new RenderHelper(gl);
-            TextureLoader.Init(gl);
+            TextureLoader.SetRenderer(gl);
 
+            RenderHelper.LoadSettings();
+            
             for (var i = 0; i < windowInput.Mice.Count; i++)
             {
                 windowInput.Mice[i].Cursor.CursorMode = CursorMode.Raw;
@@ -98,11 +100,8 @@ namespace OpenGLEngine
             cubeRenderer = new CubeRenderer();
             cubemapRenderer = new CubemapRenderer();
 
-            renderHelper.LoadSettings();
             cubeRenderer.Load();
             cubemapRenderer.Load();
-
-            shader.Load();
 
             // model = new Model("Resources/Backpack/backpack.obj");
             // model = new Model("Resources/Duck/Duck.gltf");
@@ -121,7 +120,7 @@ namespace OpenGLEngine
 
         private void OnRender(double time)
         {
-            renderHelper.Clear();
+            RenderHelper.Clear();
 
             shader.Bind();
             shader.SetMatrix4("view", camera.GetViewMatrix());
@@ -160,7 +159,7 @@ namespace OpenGLEngine
             gl.DepthFunc(DepthFunction.Less);
 
             // draw in wireframe
-            // GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+            // gl.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
         }
 
         private void OnUpdate(double time)

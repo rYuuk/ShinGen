@@ -20,10 +20,7 @@ namespace OpenGLEngine
             this.vertexPath = vertexPath;
             this.fragmentPath = fragmentPath;
             uniformLocations = new Dictionary<string, int>();
-        }
 
-        public void Load()
-        {
             var vertex = LoadShader(ShaderType.VertexShader, vertexPath);
             var fragment = LoadShader(ShaderType.FragmentShader, fragmentPath);
             handle = gl.CreateProgram();

@@ -6,25 +6,19 @@ namespace OpenGLEngine
         where TDataType : unmanaged
     {
         private readonly uint handle;
-        private readonly BufferTargetARB bufferType;
         private readonly GL gl;
 
-        public unsafe BufferObject(GL gl, Span<TDataType> data, BufferTargetARB bufferType)
+        public unsafe BufferObject(GL glRender, Span<TDataType> data, BufferTargetARB bufferType)
         {
-            this.gl = gl;
-            this.bufferType = bufferType;
+            gl = glRender;
 
-            handle = this.gl.GenBuffer();
-            Bind();
+            handle = gl.GenBuffer();
+            gl.BindBuffer(bufferType, handle);
+
             fixed (void* dataPointer = data)
             {
-                this.gl.BufferData(bufferType, (nuint) (data.Length * sizeof(TDataType)), dataPointer, BufferUsageARB.StaticDraw);
+                gl.BufferData(bufferType, (nuint) (data.Length * sizeof(TDataType)), dataPointer, BufferUsageARB.StaticDraw);
             }
-        }
-
-        public void Bind()
-        {
-            gl.BindBuffer(bufferType, handle);
         }
 
         public void Dispose()

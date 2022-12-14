@@ -1,5 +1,6 @@
 ﻿using SharpGLTF.Runtime;
 using SharpGLTF.Schema2;
+using SharpGLTF.Validation;
 using GLTFMesh = SharpGLTF.Schema2.Mesh;
 using GLTFMaterial = SharpGLTF.Schema2.Material;
 using PrimitiveType = SharpGLTF.Schema2.PrimitiveType;
@@ -17,11 +18,8 @@ namespace OpenGLEngine
             loadedTextures = new List<Texture>();
         }
 
-        public List<Mesh> Import(string path)
-        {
-            var gltfMeshes = GetGLTFMeshes(path);
-            return ParseGLTFMeshToNativeMesh(gltfMeshes);
-        }
+        public List<Mesh> Import(string path) =>
+            ParseGLTFMeshToNativeMesh(GetGLTFMeshes(path));
 
         public void Dispose()
         {
@@ -31,10 +29,13 @@ namespace OpenGLEngine
 
         private IEnumerable<GLTFMesh> GetGLTFMeshes(string path)
         {
+            // var a = new ReadSettings();
+            // a.Validation = ValidationMode.TryFix;
+            // a.ImageDecoder = ImageDecoder;
             var srcModel = ModelRoot.Load(path);
 
             var templates = srcModel.LogicalScenes
-                .Select(item => SceneTemplate.Create(item, new RuntimeOptions() { IsolateMemory = true }))
+                .Select(item => SceneTemplate.Create(item, new RuntimeOptions { IsolateMemory = false }))
                 .ToArray();
 
             var srcMeshes = templates
@@ -59,21 +60,18 @@ namespace OpenGLEngine
                     var positions = gltfMeshPrim.GetVertexAccessor("POSITION").AsVector3Array();
                     var normals = gltfMeshPrim.GetVertexAccessor("NORMAL").AsVector3Array();
                     var texCoord0 = gltfMeshPrim.GetVertexAccessor("TEXCOORD_0").AsVector2Array();
-                    var tangents = gltfMeshPrim.GetVertexAccessor("TANGENT")?.AsVector4Array();
-                    var color0 = gltfMeshPrim.GetVertexAccessor("COLOR_0")?.AsColorArray();
+                    // var tangents = gltfMeshPrim.GetVertexAccessor("TANGENT")?.AsVector4Array();
+                    // var color0 = gltfMeshPrim.GetVertexAccessor("COLOR_0")?.AsColorArray();
+                    var triangleIndices = gltfMeshPrim.GetTriangleIndices().ToArray();
 
-                    vertices.AddRange(positions.Select((t, i) => new Vertex()
+                    vertices.AddRange(positions.Select((position, i) => new Vertex
                     {
-                        Position = t,
+                        Position = position,
                         Normal = normals[i],
                         TexCoords = texCoord0[i]
                     }));
-                    foreach (var tri in gltfMeshPrim.GetTriangleIndices())
-                    {
-                        indices.Add((uint) tri.A);
-                        indices.Add((uint) tri.B);
-                        indices.Add((uint) tri.C);
-                    }
+
+                    indices.AddRange(triangleIndices.SelectMany(i => new[] { (uint) i.A, (uint) i.B, (uint) i.C }));
 
                     foreach (var texture in GetTextures(gltfMesh.Name, gltfMeshPrim.Material))
                     {
@@ -122,7 +120,7 @@ namespace OpenGLEngine
                 if (type == string.Empty)
                     continue;
 
-                var texture = new Texture()
+                var texture = new Texture
                 {
                     Path = textureKey,
                     Type = type,

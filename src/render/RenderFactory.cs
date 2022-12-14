@@ -4,14 +4,10 @@ namespace OpenGLEngine
 {
     public static class RenderFactory
     {
-        private static GL gl;
+        private static GL gl = null!;
 
-        public static void SetRenderer(GL glRender)
-        {
+        public static void SetRenderer(GL glRender) =>
             gl = glRender;
-        }
-
-        public static GL GL => gl;
 
         public static VertexArray CreateVertexArray()
             => new VertexArray(gl);
@@ -27,7 +23,5 @@ namespace OpenGLEngine
 
         public static unsafe void DrawElements(int size)
             => gl.DrawElements(PrimitiveType.Triangles, (uint)size, DrawElementsType.UnsignedInt, null);
-
-
     }
 }

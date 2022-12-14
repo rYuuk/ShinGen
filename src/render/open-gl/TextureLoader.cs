@@ -1,6 +1,7 @@
 ﻿using Silk.NET.OpenGL;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using StbImageSharp;
 
 namespace OpenGLEngine
 {
@@ -9,20 +10,16 @@ namespace OpenGLEngine
     {
         private static GL gl = null!;
 
-        public static void Init(GL library) =>
-            gl = library;
+        public static void SetRenderer(GL glRender) =>
+            gl = glRender;
 
         public static uint LoadFromPath(string path)
         {
             var handle = gl.GenTexture();
-
-            // Bind the handle
-            gl.ActiveTexture(TextureUnit.Texture0);
             gl.BindTexture(TextureTarget.Texture2D, handle);
 
             unsafe
             {
-                Console.WriteLine(path);
                 using var img = Image.Load<Rgba32>(path);
                 gl.TexImage2D(
                     TextureTarget.Texture2D,
@@ -46,28 +43,26 @@ namespace OpenGLEngine
                         }
                     }
                 });
-
             }
 
             SetParameters();
             return handle;
         }
 
-        public static uint LoadFromPath(byte[] bytes)
+        public static uint LoadFromBytes(byte[] bytes)
         {
             var handle = gl.GenTexture();
-
-            // Bind the handle
-            gl.ActiveTexture(TextureUnit.Texture0);
             gl.BindTexture(TextureTarget.Texture2D, handle);
 
+            StbImage.stbi_set_flip_vertically_on_load(1);
+            
             unsafe
             {
                 using var img = Image.Load<Rgba32>(bytes);
                 gl.TexImage2D(
                     TextureTarget.Texture2D,
                     0,
-                    InternalFormat.Rgba8,
+                    InternalFormat.Rgba,
                     (uint) img.Width,
                     (uint) img.Height,
                     0,
@@ -86,7 +81,6 @@ namespace OpenGLEngine
                         }
                     }
                 });
-
             }
 
             SetParameters();
@@ -142,9 +136,6 @@ namespace OpenGLEngine
             return handle;
         }
 
-        public static void ActivateSlot(int slot) =>
-            gl.ActiveTexture(TextureUnit.Texture0 + slot);
-
         // Multiple textures can be bound, if shader needs more than just one.
         public static void LoadSlot(uint handle, int slot)
         {
@@ -159,10 +150,8 @@ namespace OpenGLEngine
         {
             gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
             gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
-            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Linear);
+            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.LinearMipmapLinear);
             gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int) TextureMinFilter.Linear);
-            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, 0);
-            gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, 8);
             gl.GenerateMipmap(TextureTarget.Texture2D);
         }
     }
