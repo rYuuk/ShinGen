@@ -1,4 +1,6 @@
-﻿namespace OpenGLEngine
+﻿using OpenTK.Graphics.OpenGL4;
+
+namespace OpenGLEngine
 {
     public class MeshRenderer
     {
@@ -15,11 +17,9 @@
         {
             vertexArray.Load();
 
-            var vertexBuffer = new VertexBuffer<Vertex>(Vertex.GetSize() * mesh.Vertices.Length, mesh.Vertices);
-            vertexBuffer.Load();
+            var vertexBuffer = new BufferObject<Vertex>(Vertex.GetSize() * mesh.Vertices.Length, mesh.Vertices, BufferTarget.ArrayBuffer);
 
-            var indexBuffer = new IndexBuffer(mesh.Indices.Length, mesh.Indices);
-            indexBuffer.Load();
+            var indexBuffer = new BufferObject<uint>(mesh.Indices.Length * sizeof(uint), mesh.Indices, BufferTarget.ElementArrayBuffer);
 
             var layout = new VertexBufferLayout();
             layout.Push(0, 3);
@@ -30,7 +30,7 @@
             vertexArray.UnLoad();
         }
 
-        public void Draw(Shader shader, Renderer renderer)
+        public void Draw(Shader shader)
         {
             for (var i = 0; i < mesh.Textures.Length; i++)
             {
@@ -41,8 +41,10 @@
             // Active texture slot 0 again
             TextureLoader.ActivateSlot(0);
 
+            vertexArray.Load();
             // Draw
-            renderer.Draw(vertexArray, mesh.Indices.Length);
+            Renderer.DrawElements(mesh.Indices.Length);
+            vertexArray.UnLoad();
         }
     }
 }

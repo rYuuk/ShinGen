@@ -24,11 +24,11 @@
             }
         }
 
-        public void Draw(Shader shader, Renderer renderer)
+        public void Draw(Shader shader)
         {
             foreach (var meshRenderer in meshRenderers)
             {
-                meshRenderer.Draw(shader, renderer);
+                meshRenderer.Draw(shader);
             }
         }
 

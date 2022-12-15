@@ -2,52 +2,44 @@
 
 namespace OpenGLEngine
 {
-    public class Renderer
+    public static class Renderer
     {
-        private readonly bool enableDepthTest;
-
-        public Renderer(bool enableDepthTest = true)
+        public static void SetSettings()
         {
-            this.enableDepthTest = enableDepthTest;
+            Clear();
+
+            // Enable depth testing so z-buffer can be checked for fragments and
+            // only those which are in front be drawn.
+            GL.Enable(EnableCap.DepthTest);
+
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+            // Enabling culling of back face
+            GL.Enable(EnableCap.CullFace);
+            GL.CullFace(CullFaceMode.Back);
+
+            // Enable Multisampling Anti-aliasing
+            GL.Enable(EnableCap.Multisample);
+
+            // Enable Gamma correction
+            // GL.Enable(EnableCap.FramebufferSrgb);
         }
 
-        public void Load()
-        {
-            GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-
-            if (enableDepthTest)
-            {
-                // Enable depth testing so z-buffer can be checked for fragments and
-                // only those which are in front be drawn.
-                GL.Enable(EnableCap.DepthTest);
-
-                // GL.Enable(EnableCap.Blend);
-                // GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-                
-                GL.Enable(EnableCap.CullFace);
-                GL.CullFace(CullFaceMode.Back);
-            }
-        }
-
-        public void Clear()
+        public static void Clear()
         {
             GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         }
 
-        public void Draw(VertexArray vertexArray, float[] vertices, Shader shader)
+        public static void DrawArray(int count)
         {
-            vertexArray.Load();
-            shader.Bind();
-
-            GL.DrawArrays(PrimitiveType.Triangles, 0, vertices.Length);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, count);
         }
 
-        public void Draw(VertexArray vertexArray, int size)
+        public static void DrawElements(int size)
         {
-            vertexArray.Load();
             GL.DrawElements(PrimitiveType.Triangles, size, DrawElementsType.UnsignedInt, 0);
-            vertexArray.UnLoad();
         }
     }
 }

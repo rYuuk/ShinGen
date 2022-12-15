@@ -8,7 +8,6 @@ namespace OpenGLEngine
     public class ModelApplication : IDisposable
     {
         private readonly GameWindow window;
-        private readonly Renderer renderer;
 
         private readonly Input input;
         // Instance of the camera class to manage the view and projection matrix code.
@@ -37,8 +36,6 @@ namespace OpenGLEngine
                 new NativeWindowSettings
                     { Size = (800, 600), Title = "Model Loader" }
             );
-
-            renderer = new Renderer();
 
             shader = new Shader(
                 "src/shaders/shader.vert",
@@ -87,7 +84,7 @@ namespace OpenGLEngine
 
         private void Load()
         {
-            renderer.Load();
+            Renderer.SetSettings();
             // cubeRenderer.Load();            
             cubemapRenderer.Load();
 
@@ -97,7 +94,7 @@ namespace OpenGLEngine
             // model = new Model("Resources/Duck/Duck.gltf");
             // model = new Model("Resources/Duck/Duck.glb");
             // model = new Model("Resources/Avatar/MultiMesh/Avatar.glb");
-            model = new Model("Resources/Avatar/SingleMesh/Avatar.glb");
+            model = new Model("Resources/Avatar/SingleMesh/Avatar2.glb");
             model.SetupMesh();
 
             window.CursorState = CursorState.Grabbed;
@@ -112,7 +109,7 @@ namespace OpenGLEngine
 
         private void OnRender(FrameEventArgs obj)
         {
-            renderer.Clear();
+            Renderer.Clear();
 
             shader.Bind();
             shader.SetMatrix4("view", camera.GetViewMatrix());
@@ -130,10 +127,9 @@ namespace OpenGLEngine
                 shader.SetVector3("lightColors[" + i + "]", lightColors[i]);
             }
 
-            model?.Draw(shader, renderer);
+            model?.Draw(shader);
 
             // cubeRenderer.Draw(camera.GetViewMatrix(), camera.GetProjectionMatrix());
-
             cubemapRenderer.Draw(camera.GetViewMatrix().ClearTranslation(), camera.GetProjectionMatrix());
 
             // draw in wireframe

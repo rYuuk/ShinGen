@@ -20,8 +20,7 @@ namespace OpenGLEngine
         {
             vertexArray.Load();
 
-            var vertexBuffer = new VertexBuffer<float>(sizeof(float) * VertexData.CubeWithNormalAndTexCoord.Length, VertexData.CubeWithNormalAndTexCoord);
-            vertexBuffer.Load();
+            var vertexBuffer = new BufferObject<float>(sizeof(float) * VertexData.CubeWithNormalAndTexCoord.Length, VertexData.CubeWithNormalAndTexCoord, BufferTarget.ArrayBuffer);
 
             var vertexLayout = new VertexBufferLayout();
             vertexLayout.Push(0,3);
@@ -42,7 +41,7 @@ namespace OpenGLEngine
             shader.SetMatrix4("projection", projection);
 
             vertexArray.Load();
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            Renderer.DrawArray(36);
             vertexArray.UnLoad();
         }
     }

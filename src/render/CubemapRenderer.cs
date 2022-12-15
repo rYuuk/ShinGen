@@ -32,8 +32,7 @@ namespace OpenGLEngine
         {
             vertexArray.Load();
 
-            var vertexBuffer = new VertexBuffer<float>(sizeof(float) * VertexData.Skybox.Length, VertexData.Skybox);
-            vertexBuffer.Load();
+            var vertexBuffer = new BufferObject<float>(sizeof(float) * VertexData.Skybox.Length, VertexData.Skybox, BufferTarget.ArrayBuffer);
 
             var vertexLayout = new VertexBufferLayout();
             vertexLayout.Push(0, 3);
@@ -57,7 +56,7 @@ namespace OpenGLEngine
             GL.BindTexture(TextureTarget.TextureCubeMap, textureID);
 
             vertexArray.Load();
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            Renderer.DrawArray(36);
             vertexArray.UnLoad();
 
             GL.DepthFunc(DepthFunction.Less);
