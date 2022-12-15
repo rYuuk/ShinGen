@@ -1,13 +1,14 @@
 ﻿using SharpGLTF.Runtime;
 using SharpGLTF.Schema2;
+using SharpGLTF.Validation;
 using GLTFMesh = SharpGLTF.Schema2.Mesh;
 using GLTFMaterial = SharpGLTF.Schema2.Material;
+using PrimitiveType = SharpGLTF.Schema2.PrimitiveType;
 
 namespace OpenGLEngine
 {
-    public class GLTFImporter : IDisposable
+    public class GLTFImporter
     {
-        private string? directory;
         private readonly List<Texture> loadedTextures;
         private readonly List<Mesh> meshes;
 
@@ -17,10 +18,36 @@ namespace OpenGLEngine
             loadedTextures = new List<Texture>();
         }
 
-        public List<Mesh> Import(string path)
-        {
-            var gltfMeshes = GetMeshes(path);
+        public List<Mesh> Import(string path) =>
+            ParseGLTFMeshToNativeMesh(GetGLTFMeshes(path));
 
+        public void Dispose()
+        {
+            for (var i = 0; i < loadedTextures.Count; i++)
+                TextureLoader.Dispose(loadedTextures[i].ID);
+        }
+
+        private IEnumerable<GLTFMesh> GetGLTFMeshes(string path)
+        {
+            // var a = new ReadSettings();
+            // a.Validation = ValidationMode.TryFix;
+            // a.ImageDecoder = ImageDecoder;
+            var srcModel = ModelRoot.Load(path);
+
+            var templates = srcModel.LogicalScenes
+                .Select(item => SceneTemplate.Create(item, new RuntimeOptions { IsolateMemory = false }))
+                .ToArray();
+
+            var srcMeshes = templates
+                .SelectMany(item => item.LogicalMeshIds)
+                .Distinct()
+                .Select(idx => srcModel.LogicalMeshes[idx]);
+
+            return srcMeshes;
+        }
+
+        private List<Mesh> ParseGLTFMeshToNativeMesh(IEnumerable<GLTFMesh> gltfMeshes)
+        {
             foreach (var gltfMesh in gltfMeshes)
             {
                 var vertices = new List<Vertex>();
@@ -33,27 +60,30 @@ namespace OpenGLEngine
                     var positions = gltfMeshPrim.GetVertexAccessor("POSITION").AsVector3Array();
                     var normals = gltfMeshPrim.GetVertexAccessor("NORMAL").AsVector3Array();
                     var texCoord0 = gltfMeshPrim.GetVertexAccessor("TEXCOORD_0").AsVector2Array();
+                    // var tangents = gltfMeshPrim.GetVertexAccessor("TANGENT")?.AsVector4Array();
+                    // var color0 = gltfMeshPrim.GetVertexAccessor("COLOR_0")?.AsColorArray();
+                    var triangleIndices = gltfMeshPrim.GetTriangleIndices().ToArray();
 
-                    vertices.AddRange(positions.Select((t, i) => new Vertex()
+                    vertices.AddRange(positions.Select((position, i) => new Vertex
                     {
-                        Position = t,
+                        Position = position,
                         Normal = normals[i],
                         TexCoords = texCoord0[i]
                     }));
-                    foreach (var tri in gltfMeshPrim.GetTriangleIndices())
-                    {
-                        indices.Add((uint) tri.A);
-                        indices.Add((uint) tri.B);
-                        indices.Add((uint) tri.C);
-                    }
+
+                    indices.AddRange(triangleIndices.SelectMany(i => new[] { (uint) i.A, (uint) i.B, (uint) i.C }));
 
                     foreach (var texture in GetTextures(gltfMesh.Name, gltfMeshPrim.Material))
                     {
                         if (textures.Exists(x => x.Path == texture.Path))
-                        {
                             continue;
+
+                        if (!loadedTextures.Contains(texture))
+                        {
+                            texture.Load();
+                            loadedTextures.Add(texture);
                         }
-                        texture.Load();
+
                         textures.Add(texture);
                     }
                 }
@@ -63,80 +93,38 @@ namespace OpenGLEngine
             return meshes;
         }
 
-
-        public void Dispose()
-        {
-        }
-
-        private IEnumerable<GLTFMesh> GetMeshes(string path)
-        {
-            var srcModel = ModelRoot.Load(path);
-
-            var templates = srcModel.LogicalScenes
-                .Select(item => SceneTemplate.Create(item, new RuntimeOptions() { IsolateMemory = true }))
-                .ToArray();
-
-            var srcMeshes = templates
-                .SelectMany(item => item.LogicalMeshIds)
-                .Distinct()
-                .Select(idx => srcModel.LogicalMeshes[idx]);
-            directory = Path.GetDirectoryName(path);
-
-            return srcMeshes;
-        }
-
         private List<Texture> GetTextures(string meshName, GLTFMaterial gltfMaterial)
         {
             var textures = new List<Texture>();
             foreach (var materialChannel in gltfMaterial.Channels)
             {
-                if (materialChannel.Texture == null)
-                {
+                var textureKey = meshName + "_" + materialChannel.Key;
+
+                if (materialChannel.Texture == null ||
+                    textures.Exists(x => x.Path == textureKey))
                     continue;
-                }
+
                 var param = materialChannel.Parameters.Aggregate(string.Empty,
                     (current, parameter) => current + (parameter.Name + " " + parameter.Value + ","));
 
-                var extension = materialChannel.Texture.PrimaryImage.Content.IsJpg ? ".jpg" : ".png";
-                var texturePath = directory + "/" + meshName + "_" + materialChannel.Key + extension;
-                Console.WriteLine(meshName + " " + materialChannel.Key + ", " + param + " " + texturePath);
+                Console.WriteLine(meshName + ", " + textureKey + ", Param: " + param);
 
-                if (!File.Exists(texturePath))
+                var type = materialChannel.Key switch
                 {
-                    materialChannel.Texture.PrimaryImage.Content.SaveToFile(texturePath);
-                }
+                    "BaseColor" => "albedoMap",
+                    "MetallicRoughness" => "metallicMap",
+                    "Normal" => "normalMap",
+                    _ => string.Empty
+                };
 
-                if (textures.Exists(x => x.Path == texturePath))
-                {
+                if (type == string.Empty)
                     continue;
-                }
 
-                var type = string.Empty;
-
-                if (materialChannel.Key.Contains("BaseColor"))
+                var texture = new Texture
                 {
-                    type = "albedoMap";
-                }
-                else if (materialChannel.Key.Contains("Roughness"))
-                {
-                    type = "roughnessMap";
-                }
-                else if (materialChannel.Key.Contains("Normal"))
-                {
-                    type = "normalMap";
-                }
-                else if (materialChannel.Key.Contains("Occlusion"))
-                {
-                    type = "aoMap";
-                }
-                else if (materialChannel.Key.Contains("Emissive"))
-                {
-                }
-
-                var texture = new Texture()
-                {
-                    Path = texturePath,
-                    Type = type
+                    Path = textureKey,
+                    Type = type,
+                    Bytes = materialChannel.Texture.PrimaryImage.Content.Content.ToArray()
                 };
 
                 textures.Add(texture);
@@ -163,7 +151,6 @@ namespace OpenGLEngine
                         yield return gltfMeshPrim;
                         break;
                 }
-
             }
         }
     }

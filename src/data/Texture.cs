@@ -5,10 +5,11 @@
         public int ID;
         public string Type;
         public string Path;
+        public byte[] Bytes;
 
         public void Load()
         {
-            ID = TextureLoader.LoadFromPath(Path);
+            ID = TextureLoader.LoadFromBytes(Bytes);
         }
     }
 }
