@@ -8,7 +8,6 @@ in vec3 Normal;
 uniform sampler2D albedoMap;
 uniform sampler2D normalMap;
 uniform sampler2D metallicMap;
-uniform sampler2D roughnessMap;
 uniform sampler2D aoMap;
 
 // lights
@@ -83,11 +82,8 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 void main()
 {
     vec3 albedo     = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
-    float metallic  = texture(
-        metallicMap, TexCoords).r;
-//    float metallic = 0.2;
-    float roughness = texture(roughnessMap, TexCoords).r;
-//    float roughness = 0.2;
+    float metallic  = texture(metallicMap, TexCoords).b;
+    float roughness = texture(metallicMap, TexCoords).g;
     float ao        = texture(aoMap, TexCoords).r;
 
     vec3 N = getNormalFromMap();
