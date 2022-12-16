@@ -1,4 +1,5 @@
 ﻿using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace OpenGLEngine
 {
@@ -21,7 +22,7 @@ namespace OpenGLEngine
         private float yaw = -MathHelper.PiOver2;
 
         // The field of view of the camera (radians)
-        private float fov = MathHelper.PiOver2;
+        private float fov = MathHelper.PiOver2/2;
 
         public readonly float Speed;
         public readonly float Sensitivity;
@@ -91,7 +92,7 @@ namespace OpenGLEngine
         // Get the projection matrix using the CreatePerspectiveFieldOfView function.
         public Matrix4 GetProjectionMatrix()
         {
-            return Matrix4.CreatePerspectiveFieldOfView(fov, AspectRatio, 0.01f, 1000f);
+            return Matrix4.CreatePerspectiveFieldOfView(fov, AspectRatio, 0.01f, 100f);
         }
 
         // This updates the direction vertices.

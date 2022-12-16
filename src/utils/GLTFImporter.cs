@@ -99,7 +99,8 @@ namespace OpenGLEngine
             foreach (var materialChannel in gltfMaterial.Channels)
             {
                 var textureKey = meshName + "_" + materialChannel.Key;
-
+            Console.WriteLine(textureKey);
+                
                 if (materialChannel.Texture == null ||
                     textures.Exists(x => x.Path == textureKey))
                     continue;

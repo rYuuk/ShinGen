@@ -11,8 +11,13 @@ uniform sampler2D metallicMap;
 uniform sampler2D aoMap;
 
 // lights
-uniform vec3 lightPositions[4];
-uniform vec3 lightColors[4];
+struct DirectionLight{
+    vec3 Position;
+    vec3 Color;
+};
+
+
+uniform DirectionLight directionLight[4];
 
 uniform vec3 camPos;
 
@@ -85,6 +90,7 @@ void main()
     float metallic  = texture(metallicMap, TexCoords).b;
     float roughness = texture(metallicMap, TexCoords).g;
     float ao        = texture(aoMap, TexCoords).r;
+    ao        = 1.0;
 
     vec3 N = getNormalFromMap();
     vec3 V = normalize(camPos - WorldPos);
@@ -99,11 +105,11 @@ void main()
     for(int i = 0; i < 4; ++i)
     {
         // calculate per-light radiance
-        vec3 L = normalize(lightPositions[i] - WorldPos);
+        vec3 L = normalize(directionLight[i].Position - WorldPos);
         vec3 H = normalize(V + L);
-        float distance = length(lightPositions[i] - WorldPos);
+        float distance = length(directionLight[i].Position - WorldPos);
         float attenuation = 1.0 / (distance * distance);
-        vec3 radiance = lightColors[i] * attenuation;
+        vec3 radiance = directionLight[i].Color * attenuation;
 
         // Cook-Torrance BRDF
         float NDF = DistributionGGX(N, H, roughness);

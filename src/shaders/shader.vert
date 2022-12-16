@@ -15,8 +15,8 @@ out vec3 Normal;
 void main(void)
 {
     TexCoords =  vec2(aTexCoords.s, 1.0 - aTexCoords.t);;
-    WorldPos = vec3(model * vec4(aPosition, 1.0));
-    Normal = mat3(model) * aNormal;
-
-    gl_Position = vec4(aPosition, 1.0) * model * view * projection;
+    mat4 mvp = model * view * projection ;
+    gl_Position =   vec4(aPosition, 1.0) * mvp;
+    WorldPos = vec3(vec4(aPosition, 1.0) * model);
+    Normal = aNormal * mat3(transpose(inverse((model))));
 }

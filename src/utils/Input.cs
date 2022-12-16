@@ -23,6 +23,14 @@ namespace OpenGLEngine
             this.closed = closed;
         }
 
+        public void RotateWithMouse()
+        {
+            if (mouse.IsButtonPressed(MouseButton.Button1))
+            {
+                
+            }
+        }
+
         public void Update(float deltaTime)
         {
             if (input.IsKeyDown(Keys.Escape))
@@ -68,19 +76,19 @@ namespace OpenGLEngine
 
             if (firstMove)
             {
-                lastPos = new Vector2(mouse.X, mouse.Y);
-                firstMove = false;
+                // lastPos = new Vector2(mouse.X, mouse.Y);
+                // firstMove = false;
             }
             else
             {
-                var deltaX = mouse.X - lastPos.X;
-                var deltaY = mouse.Y - lastPos.Y;
-                lastPos = new Vector2(mouse.X, mouse.Y);
+                // var deltaX = mouse.X - lastPos.X;
+                // var deltaY = mouse.Y - lastPos.Y;
+                // lastPos = new Vector2(mouse.X, mouse.Y);
 
                 // Apply the camera pitch and yaw (we clamp the pitch in the camera class)
-                camera.Yaw += deltaX * camera.Sensitivity;
+                // camera.Yaw += deltaX * camera.Sensitivity;
                 // Reversed since y-coordinates range from bottom to top
-                camera.Pitch -= deltaY * camera.Sensitivity;
+                // camera.Pitch -= deltaY * camera.Sensitivity;
             }
         }
     }
