@@ -29,6 +29,7 @@ namespace OpenGLEngine
 
         private IEnumerable<GLTFMesh> GetGLTFMeshes(string path)
         {
+
             // var a = new ReadSettings();
             // a.Validation = ValidationMode.TryFix;
             // a.ImageDecoder = ImageDecoder;
