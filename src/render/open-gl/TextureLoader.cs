@@ -1,7 +1,10 @@
-﻿using Silk.NET.OpenGL;
+﻿using Silk.NET.Assimp;
+using Silk.NET.OpenGL;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using StbImageSharp;
+using TextureWrapMode = Silk.NET.OpenGL.TextureWrapMode;
 
 namespace OpenGLEngine
 {
@@ -44,6 +47,43 @@ namespace OpenGLEngine
                     }
                 });
             }
+
+            SetParameters();
+            return handle;
+        }
+
+        public static unsafe uint LoadFromBytes(void* pixelData, uint width, uint height)
+        {
+            var handle = gl.GenTexture();
+            gl.BindTexture(TextureTarget.Texture2D, handle);
+
+            StbImage.stbi_set_flip_vertically_on_load(1);
+
+            var stream = new UnmanagedMemoryStream((byte*) pixelData, height == 0 ? width : width * height);
+            using var img = Image.Load<Rgba32>(new Configuration(new PngConfigurationModule()), stream);
+
+            gl.TexImage2D(
+                TextureTarget.Texture2D,
+                0,
+                InternalFormat.Rgba,
+                (uint) img.Width,
+                (uint) img.Height,
+                0,
+                PixelFormat.Rgba,
+                PixelType.UnsignedByte,
+                null);
+
+            img.ProcessPixelRows(accessor =>
+            {
+                for (var y = 0; y < accessor.Height; y++)
+                {
+                    fixed (void* data = accessor.GetRowSpan(y))
+                    {
+                        gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, y, (uint) accessor.Width, 1, PixelFormat.Rgba, PixelType.UnsignedByte,
+                            data);
+                    }
+                }
+            });
 
             SetParameters();
             return handle;

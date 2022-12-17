@@ -1,34 +1,26 @@
 ﻿using System.Numerics;
-using OpenGLEngine;
 using Silk.NET.Assimp;
-using Silk.NET.OpenGL;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
-using Mesh = OpenGLEngine.Mesh;
-using Texture = OpenGLEngine.Texture;
 
 namespace OpenGLEngine
 {
     public class ModelImporter : IDisposable
     {
-        public ModelImporter(GL gl, string path, bool gamma = false)
+        public ModelImporter()
         {
-            this.gl = gl;
             assimp = Assimp.GetApi();
-            LoadModel(path);
         }
 
-        private readonly GL gl;
         private readonly Assimp assimp;
         private List<Texture> texturesLoaded = new List<Texture>();
-        public string Directory { get; protected set; } = string.Empty;
-        public List<Mesh> Meshes { get; protected set; } = new List<Mesh>();
+        private List<Mesh> Meshes { get; } = new List<Mesh>();
 
-        private void LoadModel(string path)
+        public List<Mesh> LoadModel(string path)
         {
 
             unsafe
             {
-                var scene = assimp.ImportFile(path, (uint) PostProcessSteps.Triangulate);
+                var scene = assimp.ImportFile(path, (uint) (PostProcessSteps.Triangulate | PostProcessSteps.FlipUVs));
 
                 if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
                 {
@@ -36,10 +28,10 @@ namespace OpenGLEngine
                     throw new Exception(error);
                 }
 
-                Directory = path;
-
                 ProcessNode(scene->MRootNode, scene);
             }
+
+            return Meshes;
         }
 
         private unsafe void ProcessNode(Node* node, Scene* scene)
@@ -59,18 +51,17 @@ namespace OpenGLEngine
 
         private unsafe Mesh ProcessMesh(AssimpMesh* mesh, Scene* scene)
         {
-            // data to fill
-            List<Vertex> vertices = new List<Vertex>();
-            List<uint> indices = new List<uint>();
-            List<Texture> textures = new List<Texture>();
+            var vertices = new List<Vertex>();
+            var indices = new List<uint>();
+            var textures = new List<Texture>();
 
             // walk through each of the mesh's vertices
             for (uint i = 0; i < mesh->MNumVertices; i++)
             {
-                Vertex vertex = new Vertex();
+                var vertex = new Vertex();
                 // vertex.BoneIds = new int[Vertex.MAX_BONE_INFLUENCE];
                 // vertex.Weights = new float[Vertex.MAX_BONE_INFLUENCE];
-                Vector3
+                var
                     vector = new Vector3(); // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
                 // positions
                 vector.X = mesh->MVertices[i].X;
@@ -120,13 +111,13 @@ namespace OpenGLEngine
             // now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
             for (uint i = 0; i < mesh->MNumFaces; i++)
             {
-                Face face = mesh->MFaces[i];
+                var face = mesh->MFaces[i];
                 // retrieve all indices of the face and store them in the indices vector
                 for (uint j = 0; j < face.MNumIndices; j++)
                     indices.Add(face.MIndices[j]);
             }
             // process materials
-            Material* material = scene->MMaterials[mesh->MMaterialIndex];
+            var material = scene->MMaterials[mesh->MMaterialIndex];
             // we assume a convention for sampler names in the shaders. Each diffuse texture should be named
             // as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER. 
             // Same applies to other texture as the following list summarizes:
@@ -134,56 +125,33 @@ namespace OpenGLEngine
             // specular: texture_specularN
             // normal: texture_normalN
 
-            foreach (TextureType t in Enum.GetValues(typeof(TextureType)))
-            {
-                var count = assimp.GetMaterialTextureCount(material, t);
-                if (count == 1)
-                {
-                    AssimpString path;
-                    var a = assimp.GetMaterialTexture(material, t, 0, &path, null, null, null, null, null, null);
-                    int index = int.Parse(path.ToString()[1].ToString());
-                    Console.WriteLine(t + " : " + scene->MTextures[index]->MFilename);
-                    // Console.WriteLine( t +  " : " + a + "," + scene->MTextures[index]->MFilename);
-                }
-            }
-
-
             // 1. diffuse maps
-            var diffuseMaps = LoadMaterialTextures(material, TextureType.Diffuse, "texture_diffuse");
+            var diffuseMaps = LoadMaterialTextures(material, mesh->MName, TextureType.BaseColor, "albedoMap", scene);
             if (diffuseMaps.Any())
             {
-                Console.WriteLine("wow1");
                 textures.AddRange(diffuseMaps);
 
             }
             // 2. specular maps
-            var specularMaps = LoadMaterialTextures(material, TextureType.Specular, "texture_specular");
+            var specularMaps = LoadMaterialTextures(material, mesh->MName, TextureType.Normals, "normalMap", scene);
             if (specularMaps.Any())
             {
-                Console.WriteLine("wow2");
                 textures.AddRange(specularMaps);
             }
             // 3. normal maps
-            var normalMaps = LoadMaterialTextures(material, TextureType.Height, "texture_normal");
+            var normalMaps = LoadMaterialTextures(material, mesh->MName, TextureType.Unknown, "metallicMap", scene);
             if (normalMaps.Any())
             {
-                Console.WriteLine("wow3");
                 textures.AddRange(normalMaps);
-            }
-            // 4. height maps
-            var heightMaps = LoadMaterialTextures(material, TextureType.Ambient, "texture_height");
-            if (heightMaps.Any())
-            {
-                Console.WriteLine("wow4");
-                textures.AddRange(heightMaps);
             }
 
             // return a mesh object created from the extracted mesh data
-            var result = new Mesh();
+            var result = new Mesh(vertices.ToArray(), indices.ToArray(), textures.ToArray());
+
             return result;
         }
 
-        private unsafe List<Texture> LoadMaterialTextures(Material* mat, TextureType type, string typeName)
+        private unsafe List<Texture> LoadMaterialTextures(Material* mat, string meshName, TextureType type, string typeName, Scene* scene)
         {
             var textureCount = assimp.GetMaterialTextureCount(mat, type);
             List<Texture> textures = new List<Texture>();
@@ -191,24 +159,32 @@ namespace OpenGLEngine
             {
                 AssimpString path;
                 assimp.GetMaterialTexture(mat, type, i, &path, null, null, null, null, null, null);
-                bool skip = false;
+                var skip = false;
+                var index = int.Parse(path.ToString()[1].ToString());
+                var assimpTexture = scene->MTextures[index];
+                var textureName = meshName + assimpTexture->MFilename;
+
                 for (int j = 0; j < texturesLoaded.Count; j++)
                 {
-                    if (texturesLoaded[j].Path == path)
+                    if (texturesLoaded[j].Path == textureName)
                     {
                         textures.Add(texturesLoaded[j]);
                         skip = true;
                         break;
                     }
                 }
-                if (!skip)
-                {
-                    var texture = new Texture();
-                    texture.Path = path;
-                    textures.Add(texture);
-                    texturesLoaded.Add(texture);
-                    // texture.Load();
-                }
+                if (skip) continue;
+
+                var texture = new Texture();
+                texture.ID = TextureLoader.LoadFromBytes(assimpTexture->PcData, assimpTexture->MWidth, assimpTexture->MHeight);
+                texture.Path = path;
+                texture.Type = typeName;
+                // texture.Width = assimpTexture->MWidth;
+                // texture.Height = assimpTexture->MHeight;
+                // texture.PixelData = assimpTexture->PcData;
+
+                texturesLoaded.Add(texture);
+                textures.Add(texture);
             }
             return textures;
         }

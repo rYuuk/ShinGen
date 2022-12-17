@@ -125,9 +125,6 @@ namespace OpenGLEngine
 
             platform = new Model("Resources/Platform.glb");
             platform.SetupMesh();
-
-            new ModelImporter(gl,"Resources/Avatar/SingleMesh/Avatar.glb");
-
         }
 
         private void OnUnload()
@@ -176,7 +173,6 @@ namespace OpenGLEngine
 
             platform.Draw(platformShader);
 
-
             // cubeRenderer.Draw(camera.GetViewMatrix(), camera.GetProjectionMatrix());
 
             var view = camera.GetViewMatrix();
@@ -199,7 +195,7 @@ namespace OpenGLEngine
             // gl.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
         }
 
-        private unsafe void OnMouseMove(IMouse mouse, Vector2 position)
+        private void OnMouseMove(IMouse mouse, Vector2 position)
         {
             if (mouse.IsButtonPressed(MouseButton.Left))
             {

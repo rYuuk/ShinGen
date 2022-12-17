@@ -5,15 +5,15 @@
         private readonly List<Mesh> meshes;
         private readonly List<MeshRenderer> meshRenderers;
 
-        // private readonly ModelImporter importer;
-        private readonly GLTFImporter importer;
+        private readonly ModelImporter importer;
+        // private readonly GLTFImporter importer;
         
         public Model(string path)
         {
             meshRenderers = new List<MeshRenderer>();
-            // importer = new ModelImporter();
-            importer = new GLTFImporter();
-            meshes = importer.Import(path);
+            importer = new ModelImporter();
+            // importer = new GLTFImporter();
+            meshes =  importer.LoadModel(path);
         }
 
         public void SetupMesh()
