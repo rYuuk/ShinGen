@@ -34,6 +34,8 @@ namespace OpenGLEngine
 
         public void Draw(Shader shader)
         {
+            shader.SetInt("useNormalMap", mesh.UseNormalMap ? 1 : 0);
+
             for (var i = 0; i < mesh.Textures.Length; i++)
             {
                 var name = mesh.Textures[i].Type;
@@ -52,6 +54,12 @@ namespace OpenGLEngine
             vertexArray.Dispose();
             vertexBufferObject.Dispose();
             elementBufferObject.Dispose();
+            for (var i = 0; i < mesh.Textures.Length; i++)
+            {
+                TextureLoader.Dispose(mesh.Textures[i].ID);
+            }
+            GC.SuppressFinalize(this);
+
         }
     }
 }

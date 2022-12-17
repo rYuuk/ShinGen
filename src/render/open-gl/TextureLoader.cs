@@ -1,9 +1,7 @@
-﻿using Silk.NET.Assimp;
-using Silk.NET.OpenGL;
+﻿using Silk.NET.OpenGL;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using StbImageSharp;
 using TextureWrapMode = Silk.NET.OpenGL.TextureWrapMode;
 
 namespace OpenGLEngine
@@ -57,10 +55,8 @@ namespace OpenGLEngine
             var handle = gl.GenTexture();
             gl.BindTexture(TextureTarget.Texture2D, handle);
 
-            StbImage.stbi_set_flip_vertically_on_load(1);
-
             var stream = new UnmanagedMemoryStream((byte*) pixelData, height == 0 ? width : width * height);
-            using var img = Image.Load<Rgba32>(new Configuration(new PngConfigurationModule()), stream);
+            using var img = Image.Load<Rgba32>(Configuration.Default, stream);
 
             gl.TexImage2D(
                 TextureTarget.Texture2D,
@@ -94,8 +90,6 @@ namespace OpenGLEngine
             var handle = gl.GenTexture();
             gl.BindTexture(TextureTarget.Texture2D, handle);
 
-            StbImage.stbi_set_flip_vertically_on_load(1);
-            
             unsafe
             {
                 using var img = Image.Load<Rgba32>(bytes);
@@ -175,6 +169,12 @@ namespace OpenGLEngine
 
             return handle;
         }
+        
+        public static void Activate(int slot)
+        {
+            gl.ActiveTexture(TextureUnit.Texture0 + slot);
+        }
+
 
         // Multiple textures can be bound, if shader needs more than just one.
         public static void LoadSlot(uint handle, int slot)

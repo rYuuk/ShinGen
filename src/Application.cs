@@ -116,11 +116,8 @@ namespace OpenGLEngine
             cubeRenderer.Load();
             cubemapRenderer.Load();
 
-            // model = new Model("Resources/Backpack/backpack.obj");
-            // model = new Model("Resources/Duck/Duck.gltf");
-            // model = new Model("Resources/Duck/Duck.glb");
-            // model = new Model("Resources/Avatar/MultiMesh/Avatar.glb");
-            avatar = new Model("Resources/Avatar/SingleMesh/Avatar.glb");
+            avatar = new Model("Resources/Avatar/MultiMesh/Avatar.glb");
+            // avatar = new Model("Resources/Avatar/SingleMesh/Avatar.glb");
             avatar.SetupMesh();
 
             platform = new Model("Resources/Platform.glb");

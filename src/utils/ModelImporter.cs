@@ -39,7 +39,6 @@ namespace OpenGLEngine
             {
                 var mesh = scene->MMeshes[node->MMeshes[i]];
                 Meshes.Add(ProcessMesh(mesh, scene));
-
             }
 
             for (var i = 0; i < node->MNumChildren; i++)
@@ -59,7 +58,7 @@ namespace OpenGLEngine
                 var vertex = new Vertex();
                 // vertex.BoneIds = new int[Vertex.MAX_BONE_INFLUENCE];
                 // vertex.Weights = new float[Vertex.MAX_BONE_INFLUENCE];
-                var  vector = new Vector3();
+                var vector = new Vector3();
                 vector.X = mesh->MVertices[i].X;
                 vector.Y = mesh->MVertices[i].Y;
                 vector.Z = mesh->MVertices[i].Z;
@@ -96,18 +95,20 @@ namespace OpenGLEngine
             }
 
             var material = scene->MMaterials[mesh->MMaterialIndex];
-
             textures.AddRange(LoadMaterialTextures(material, mesh->MName, TextureType.BaseColor, "albedoMap", scene));
             textures.AddRange(LoadMaterialTextures(material, mesh->MName, TextureType.Normals, "normalMap", scene));
             textures.AddRange(LoadMaterialTextures(material, mesh->MName, TextureType.Unknown, "metallicMap", scene));
 
-            // return a mesh object created from the extracted mesh data
-            var result = new Mesh(vertices.ToArray(), indices.ToArray(), textures.ToArray());
+            var result = new Mesh(
+                mesh->MName,
+                vertices.ToArray(),
+                indices.ToArray(),
+                textures.ToArray());
 
             return result;
         }
 
-        private unsafe List<Texture> LoadMaterialTextures(Material* mat, string meshName, TextureType type, string typeName, Scene* scene)
+        private unsafe IEnumerable<Texture> LoadMaterialTextures(Material* mat, string meshName, TextureType type, string typeName, Scene* scene)
         {
             var textureCount = assimp.GetMaterialTextureCount(mat, type);
             var textures = new List<Texture>();
@@ -116,11 +117,11 @@ namespace OpenGLEngine
                 AssimpString path;
                 assimp.GetMaterialTexture(mat, type, i, &path, null, null, null, null, null, null);
                 var skip = false;
-                var index = int.Parse(path.ToString()[1].ToString());
+                int index = int.Parse(path.ToString().Substring(1));
                 var assimpTexture = scene->MTextures[index];
-                var textureName = meshName + assimpTexture->MFilename;
+                var textureName = meshName + "_" + typeName + "_" + assimpTexture->MFilename;
 
-                Console.WriteLine(meshName);
+                Console.WriteLine(textureName);
                 for (var j = 0; j < texturesLoaded.Count; j++)
                 {
                     if (texturesLoaded[j].Name != textureName) continue;
@@ -132,7 +133,7 @@ namespace OpenGLEngine
 
                 var texture = new Texture();
                 texture.ID = TextureLoader.LoadFromBytes(assimpTexture->PcData, assimpTexture->MWidth, assimpTexture->MHeight);
-                texture.Name = path;
+                texture.Name = textureName;
                 texture.Type = typeName;
 
                 texturesLoaded.Add(texture);
@@ -143,11 +144,8 @@ namespace OpenGLEngine
 
         public void Dispose()
         {
-            foreach (var texture in texturesLoaded)
-            {
-                TextureLoader.Dispose(texture.ID);
-            }
             texturesLoaded = null!;
+            GC.SuppressFinalize(this);
         }
     }
 }
