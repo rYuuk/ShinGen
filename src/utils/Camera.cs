@@ -21,7 +21,7 @@ namespace OpenGLEngine
         private float yaw = -MathHelper.PiOver2;
 
         // The field of view of the camera (radians)
-        private float fov = MathHelper.PiOver2;
+        private float fov = MathHelper.PiOver2/2;
 
         public readonly float Speed;
         public readonly float Sensitivity;

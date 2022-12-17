@@ -19,8 +19,14 @@ namespace OpenGLEngine
         private CubeRenderer cubeRenderer = null!;
         private CubemapRenderer cubemapRenderer = null!;
 
-        private Shader shader = null!;
-        private Model model = null!;
+        private Shader avatarShader = null!;
+        private Model avatar = null!;
+
+        private Shader platformShader = null!;
+        private Model platform = null!;
+
+        private bool firstMove;
+        private float lastPos;
 
         private readonly Vector3[] lightPositions =
         {
@@ -33,6 +39,7 @@ namespace OpenGLEngine
         };
 
         private bool isFocused = true;
+        private float degrees;
 
         public ModelApplication()
         {
@@ -72,7 +79,7 @@ namespace OpenGLEngine
         private void OnLoad()
         {
             gl = GL.GetApi(window);
-            
+
             var windowInput = window.CreateInput();
 
             RenderHelper.SetRenderer(gl);
@@ -80,19 +87,25 @@ namespace OpenGLEngine
             TextureLoader.SetRenderer(gl);
 
             RenderHelper.LoadSettings();
-            
+
             for (var i = 0; i < windowInput.Mice.Count; i++)
             {
                 windowInput.Mice[i].Cursor.CursorMode = CursorMode.Raw;
+                windowInput.Mice[i].MouseMove += OnMouseMove;
                 windowInput.Mice[i].Scroll += OnMouseWheel;
             }
 
             // Initialize the camera so that it is 3 units back from where the rectangle is.
-            camera = new Camera(new Vector3(0, 0, 2), window.Size.X / (float) window.Size.Y, 1f, 0.1f);
+            camera = new Camera(new Vector3(-1, 0.8f, 3), window.Size.X / (float) window.Size.Y, 1f, 0.1f);
             // To make the mouse cursor invisible and captured so to have proper FPS-camera movement.
             input = new Input(camera, windowInput.Keyboards[0], windowInput.Mice[0], window.Close);
 
-            shader = new Shader(
+            avatarShader = new Shader(
+                gl,
+                "src/shaders/shader.vert",
+                "src/shaders/shader.frag");
+
+            platformShader = new Shader(
                 gl,
                 "src/shaders/shader.vert",
                 "src/shaders/shader.frag");
@@ -107,37 +120,62 @@ namespace OpenGLEngine
             // model = new Model("Resources/Duck/Duck.gltf");
             // model = new Model("Resources/Duck/Duck.glb");
             // model = new Model("Resources/Avatar/MultiMesh/Avatar.glb");
-            model = new Model("Resources/Avatar/SingleMesh/Avatar.glb");
-            model.SetupMesh();
+            avatar = new Model("Resources/Avatar/SingleMesh/Avatar.glb");
+            avatar.SetupMesh();
+
+            platform = new Model("Resources/Platform.glb");
+            platform.SetupMesh();
+
+            new ModelImporter(gl,"Resources/Avatar/SingleMesh/Avatar.glb");
+
         }
 
         private void OnUnload()
         {
-            shader.Unbind();
-            shader.Dispose();
-            model.Dispose();
+            avatarShader.Unbind();
+            avatarShader.Dispose();
+            avatar.Dispose();
         }
 
         private void OnRender(double time)
         {
             RenderHelper.Clear();
 
-            shader.Bind();
-            shader.SetMatrix4("view", camera.GetViewMatrix());
-            shader.SetMatrix4("projection", camera.GetProjectionMatrix());
-            shader.SetVector3("camPos", camera.Position);
+            avatarShader.Bind();
+            avatarShader.SetMatrix4("view", camera.GetViewMatrix());
+            avatarShader.SetMatrix4("projection", camera.GetProjectionMatrix());
+            avatarShader.SetVector3("camPos", camera.Position);
 
             var modelMatrix = Matrix4x4.CreateScale(1f);
             modelMatrix *= Matrix4x4.CreateTranslation(0.0f, 0.0f, 0f);
-            shader.SetMatrix4("model", modelMatrix);
+            modelMatrix *= Matrix4x4.CreateRotationY(MathHelper.DegreesToRadians(degrees));
+            avatarShader.SetMatrix4("model", modelMatrix);
 
             for (var i = 0; i < lightPositions.Length; ++i)
             {
-                shader.SetVector3("lightPositions[" + i + "]", lightPositions[i]);
-                shader.SetVector3("lightColors[" + i + "]", lightColors[i]);
+                avatarShader.SetVector3("lightPositions[" + i + "]", lightPositions[i]);
+                avatarShader.SetVector3("lightColors[" + i + "]", lightColors[i]);
             }
 
-            model.Draw(shader);
+            avatar.Draw(avatarShader);
+
+            platformShader.Bind();
+            platformShader.SetMatrix4("view", camera.GetViewMatrix());
+            platformShader.SetMatrix4("projection", camera.GetProjectionMatrix());
+            platformShader.SetVector3("camPos", camera.Position);
+
+            modelMatrix = Matrix4x4.CreateScale(0.1f);
+            modelMatrix *= Matrix4x4.CreateTranslation(0.0f, -0.12f, 0.0f);
+            platformShader.SetMatrix4("model", modelMatrix);
+
+            for (var i = 0; i < lightPositions.Length; ++i)
+            {
+                platformShader.SetVector3("lightPositions[" + i + "]", lightPositions[i]);
+                platformShader.SetVector3("lightColors[" + i + "]", lightColors[i]);
+            }
+
+            platform.Draw(platformShader);
+
 
             // cubeRenderer.Draw(camera.GetViewMatrix(), camera.GetProjectionMatrix());
 
@@ -159,6 +197,25 @@ namespace OpenGLEngine
 
             // draw in wireframe
             // gl.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+        }
+
+        private unsafe void OnMouseMove(IMouse mouse, Vector2 position)
+        {
+            if (mouse.IsButtonPressed(MouseButton.Left))
+            {
+                if (firstMove)
+                {
+                    lastPos = position.X;
+                    firstMove = false;
+                }
+                else
+                {
+                    var deltaX = position.X - lastPos;
+                    lastPos = position.X;
+
+                    degrees += deltaX * 5;
+                }
+            }
         }
 
         private void OnUpdate(double time)

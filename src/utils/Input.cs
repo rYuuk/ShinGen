@@ -68,19 +68,19 @@ namespace OpenGLEngine
 
             if (firstMove)
             {
-                lastPos = new Vector2(mouse.Position.X, mouse.Position.Y);
-                firstMove = false;
+                // lastPos = new Vector2(mouse.Position.X, mouse.Position.Y);
+                // firstMove = false;
             }
             else
             {
-                var deltaX = mouse.Position.X - lastPos.X;
-                var deltaY = mouse.Position.Y - lastPos.Y;
-                lastPos = new Vector2(mouse.Position.X, mouse.Position.Y);
+                // var deltaX = mouse.Position.X - lastPos.X;
+                // var deltaY = mouse.Position.Y - lastPos.Y;
+                // lastPos = new Vector2(mouse.Position.X, mouse.Position.Y);
                 
                 // Apply the camera pitch and yaw (we clamp the pitch in the camera class)
-                camera.Yaw += deltaX * camera.Sensitivity;
+                // camera.Yaw += deltaX * camera.Sensitivity;
                 // Reversed since y-coordinates range from bottom to top
-                camera.Pitch -= deltaY * camera.Sensitivity;
+                // camera.Pitch -= deltaY * camera.Sensitivity;
             }
         }
     }
