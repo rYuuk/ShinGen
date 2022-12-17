@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+﻿using  System.Numerics;
 
 namespace OpenGLEngine
 {
@@ -7,12 +7,14 @@ namespace OpenGLEngine
         public Vector3 Position;
         public Vector3 Normal;
         public Vector2 TexCoords;
+        public Vector4 Joints;
+        public Vector4 Weights;
 
         public static int GetSize()
         {
             unsafe
             {
-                return 2 * sizeof(Vector3) + sizeof(Vector2);
+                return sizeof(Vertex);
             }
         }
     }
