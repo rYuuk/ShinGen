@@ -5,6 +5,6 @@ namespace OpenGLEngine
     {
         public uint ID;
         public string Type;
-        public string Path;
+        public string Name;
     }
 }
