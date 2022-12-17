@@ -133,8 +133,7 @@ namespace OpenGLEngine
 
             for (var i = 0; i < lightPositions.Length; ++i)
             {
-                var newPos = lightPositions[i] + new Vector3(MathF.Sin((float) time * 5.0f) * 5.0f, 0.0f, 0.0f);
-                shader.SetVector3("lightPositions[" + i + "]", newPos);
+                shader.SetVector3("lightPositions[" + i + "]", lightPositions[i]);
                 shader.SetVector3("lightColors[" + i + "]", lightColors[i]);
             }
 

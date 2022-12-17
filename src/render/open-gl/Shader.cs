@@ -75,7 +75,7 @@ namespace OpenGLEngine
             // Transpose determines whether or not the matrices should be transposed.
             // Since OpenTK uses row-major, whereas GLSL typically uses column-major,
             // we will almost always want to use true here.
-            gl.UniformMatrix4(uniformLocations[name], 1, true, (float*) &matrix);
+            gl.UniformMatrix4(uniformLocations[name], 1, false, (float*) &matrix);
         }
 
         private uint LoadShader(ShaderType type, string path)
