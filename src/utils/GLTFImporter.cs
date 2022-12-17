@@ -62,8 +62,8 @@ namespace OpenGLEngine
                     var positions = positionVertexAccessor.AsVector3Array();
                     var normals = gltfMeshPrim.GetVertexAccessor("NORMAL").AsVector3Array();
                     var texCoord0 = gltfMeshPrim.GetVertexAccessor("TEXCOORD_0").AsVector2Array();
-                    var joints0 = gltfMeshPrim.GetVertexAccessor("JOINTS_0").AsVector4Array();
-                    var weights0 = gltfMeshPrim.GetVertexAccessor("WEIGHTS_0").AsVector4Array();
+                    var joints0 = gltfMeshPrim.GetVertexAccessor("JOINTS_0")?.AsVector4Array();
+                    var weights0 = gltfMeshPrim.GetVertexAccessor("WEIGHTS_0")?.AsVector4Array();
 
                     if (joints0 == null)
                     {
