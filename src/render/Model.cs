@@ -8,7 +8,7 @@
         public Model(string path)
         {
             meshRenderers = new List<MeshRenderer>();
-            using var importer = new ModelImporter();
+            var importer = new ModelImporter();
             meshes =  importer.LoadModel(path);
         }
 

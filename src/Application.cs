@@ -113,7 +113,7 @@ namespace OpenGLEngine
             cubeRenderer = new CubeRenderer();
             cubemapRenderer = new CubemapRenderer();
 
-            cubeRenderer.Load();
+            // cubeRenderer.Load();
             cubemapRenderer.Load();
 
             avatar = new Model("Resources/Avatar/MultiMesh/Avatar.glb");
