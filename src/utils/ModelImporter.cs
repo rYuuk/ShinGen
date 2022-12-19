@@ -4,16 +4,20 @@ using AssimpMesh = Silk.NET.Assimp.Mesh;
 
 namespace OpenGLEngine
 {
-    public class ModelImporter : IDisposable
+    public class ModelImporter
     {
+        private readonly Assimp assimp;
+        private List<Mesh> Meshes { get; } = new List<Mesh>();
+
+        private readonly BoneWeightProcessor boneWeightProcessor;
+        private readonly TextureImporter textureImporter;
+
         public ModelImporter()
         {
             assimp = Assimp.GetApi();
+            boneWeightProcessor = new BoneWeightProcessor();
+            textureImporter = new TextureImporter(assimp);
         }
-
-        private readonly Assimp assimp;
-        private List<Texture> texturesLoaded = new List<Texture>();
-        private List<Mesh> Meshes { get; } = new List<Mesh>();
 
         public List<Mesh> LoadModel(string path)
         {
@@ -49,15 +53,31 @@ namespace OpenGLEngine
 
         private unsafe Mesh ProcessMesh(AssimpMesh* mesh, Scene* scene)
         {
-            var vertices = new List<Vertex>();
-            var indices = new List<uint>();
-            var textures = new List<Texture>();
+            var vertices = ProcessVertices(mesh);
+            var indices = ProcessIndices(mesh);
+            var textures = textureImporter.ImportTextures(
+                    scene->MTextures,
+                    mesh->MName,
+                    scene->MMaterials[mesh->MMaterialIndex])
+                .ToList();
 
-            for (uint i = 0; i < mesh->MNumVertices; i++)
+            boneWeightProcessor.ProcessBoneWeight(vertices, mesh);
+
+            var result = new Mesh(
+                mesh->MName,
+                vertices.ToArray(),
+                indices.ToArray(),
+                textures.ToArray());
+
+            return result;
+        }
+
+        private unsafe List<Vertex> ProcessVertices(AssimpMesh* mesh)
+        {
+            var vertices = new List<Vertex>();
+            for (var i = 0; i < mesh->MNumVertices; i++)
             {
                 var vertex = new Vertex();
-                // vertex.BoneIds = new int[Vertex.MAX_BONE_INFLUENCE];
-                // vertex.Weights = new float[Vertex.MAX_BONE_INFLUENCE];
                 var vector = new Vector3();
                 vector.X = mesh->MVertices[i].X;
                 vector.Y = mesh->MVertices[i].Y;
@@ -84,8 +104,16 @@ namespace OpenGLEngine
                 else
                     vertex.TexCoords = new Vector2(0.0f, 0.0f);
 
+                boneWeightProcessor.SetVertexBoneDataToDefault(vertex);
                 vertices.Add(vertex);
             }
+
+            return vertices;
+        }
+
+        private unsafe List<uint> ProcessIndices(AssimpMesh* mesh)
+        {
+            var indices = new List<uint>();
 
             for (uint i = 0; i < mesh->MNumFaces; i++)
             {
@@ -93,59 +121,7 @@ namespace OpenGLEngine
                 for (uint j = 0; j < face.MNumIndices; j++)
                     indices.Add(face.MIndices[j]);
             }
-
-            var material = scene->MMaterials[mesh->MMaterialIndex];
-            textures.AddRange(LoadMaterialTextures(material, mesh->MName, TextureType.BaseColor, "albedoMap", scene));
-            textures.AddRange(LoadMaterialTextures(material, mesh->MName, TextureType.Normals, "normalMap", scene));
-            textures.AddRange(LoadMaterialTextures(material, mesh->MName, TextureType.Unknown, "metallicMap", scene));
-
-            var result = new Mesh(
-                mesh->MName,
-                vertices.ToArray(),
-                indices.ToArray(),
-                textures.ToArray());
-
-            return result;
-        }
-
-        private unsafe IEnumerable<Texture> LoadMaterialTextures(Material* mat, string meshName, TextureType type, string typeName, Scene* scene)
-        {
-            var textureCount = assimp.GetMaterialTextureCount(mat, type);
-            var textures = new List<Texture>();
-            for (uint i = 0; i < textureCount; i++)
-            {
-                AssimpString path;
-                assimp.GetMaterialTexture(mat, type, i, &path, null, null, null, null, null, null);
-                var skip = false;
-                int index = int.Parse(path.ToString().Substring(1));
-                var assimpTexture = scene->MTextures[index];
-                var textureName = meshName + "_" + typeName + "_" + assimpTexture->MFilename;
-
-                Console.WriteLine(textureName);
-                for (var j = 0; j < texturesLoaded.Count; j++)
-                {
-                    if (texturesLoaded[j].Name != textureName) continue;
-                    textures.Add(texturesLoaded[j]);
-                    skip = true;
-                    break;
-                }
-                if (skip) continue;
-
-                var texture = new Texture();
-                texture.ID = TextureLoader.LoadFromBytes(assimpTexture->PcData, assimpTexture->MWidth, assimpTexture->MHeight);
-                texture.Name = textureName;
-                texture.Type = typeName;
-
-                texturesLoaded.Add(texture);
-                textures.Add(texture);
-            }
-            return textures;
-        }
-
-        public void Dispose()
-        {
-            texturesLoaded = null!;
-            GC.SuppressFinalize(this);
+            return indices;
         }
     }
 }

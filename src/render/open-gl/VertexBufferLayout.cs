@@ -32,16 +32,16 @@ namespace OpenGLEngine
             Elements = new List<VertexBufferElement>();
         }
 
-        public void Push(int index, int count)
+        public void Push(int index, int count, GLEnum type = GLEnum.Float)
         {
             Elements.Add(new VertexBufferElement()
             {
                 Index = index,
-                Type = GLEnum.Float,
+                Type = type,
                 Count = count,
                 Normalized = false
             });
-            Stride += count * VertexBufferElement.GetSizeOfType(GLEnum.Float);
+            Stride += count * VertexBufferElement.GetSizeOfType(type);
         }
     }
 }

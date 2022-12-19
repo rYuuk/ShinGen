@@ -27,6 +27,8 @@ namespace OpenGLEngine
             layout.Push(0, 3);
             layout.Push(1, 3);
             layout.Push(2, 2);
+            layout.Push(3, 4, GLEnum.Int);
+            layout.Push(4, 4);
 
             vertexArray.AddBufferLayout(layout);
             vertexArray.UnLoad();
