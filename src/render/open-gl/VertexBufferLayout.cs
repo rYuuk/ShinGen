@@ -7,7 +7,9 @@ namespace OpenGLEngine
         public int Index;
         public GLEnum Type;
         public int Count;
+        public int Stride;
         public bool Normalized;
+        public int Offset;
 
         public static int GetSizeOfType(GLEnum type)
         {
@@ -32,16 +34,18 @@ namespace OpenGLEngine
             Elements = new List<VertexBufferElement>();
         }
 
-        public void Push(int index, int count, GLEnum type = GLEnum.Float)
+        public void Push(int index, int count, int offset,  GLEnum type = GLEnum.Float, bool normalized = false)
         {
-            Elements.Add(new VertexBufferElement()
+            Elements.Add(new VertexBufferElement
             {
                 Index = index,
                 Type = type,
                 Count = count,
-                Normalized = false
+                Normalized = normalized,
+                Offset =  offset,
+                Stride = count * VertexBufferElement.GetSizeOfType(type)
             });
-            Stride += count * VertexBufferElement.GetSizeOfType(type);
+            // Stride += count * VertexBufferElement.GetSizeOfType(type);
         }
     }
 }

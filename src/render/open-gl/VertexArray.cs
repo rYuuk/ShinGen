@@ -12,23 +12,35 @@ namespace OpenGLEngine
             this.gl = gl;
             handle = gl.GenVertexArray();
         }
-        
+
         public unsafe void AddBufferLayout(VertexBufferLayout layout)
         {
             Load();
             var elements = layout.Elements;
-            var offset = 0;
             foreach (var element in elements)
             {
-                gl.EnableVertexAttribArray((uint)element.Index);
-                gl.VertexAttribPointer(
-                    (uint)element.Index,
-                    element.Count,
-                    element.Type,
-                    element.Normalized,
-                    (uint)layout.Stride,
-                    (void*)offset);
-                offset += element.Count * VertexBufferElement.GetSizeOfType(element.Type);
+                gl.EnableVertexAttribArray((uint) element.Index);
+
+                if (element.Type == GLEnum.Int)
+                {
+                    gl.VertexAttribIPointer(
+                        (uint) element.Index,
+                        element.Count,
+                        element.Type,
+                        (uint) element.Stride,
+                        (void*) element.Offset);
+                }
+                else
+                {
+                    gl.VertexAttribPointer(
+                        (uint) element.Index,
+                        element.Count,
+                        element.Type,
+                        element.Normalized,
+                        (uint) element.Stride,
+                        (void*) element.Offset);
+                }
+
             }
         }
 

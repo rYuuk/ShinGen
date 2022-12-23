@@ -3,7 +3,7 @@ using Silk.NET.OpenGL;
 
 namespace OpenGLEngine
 {
-    public class CubemapRenderer
+    public class CubemapRenderer : IDisposable
     {
         private readonly string[] cubeMapFaceTextures =
         {
@@ -17,6 +17,8 @@ namespace OpenGLEngine
 
         private readonly VertexArray vertexArray;
         private readonly Shader shader;
+        private BufferObject vbo;
+
 
         private uint textureID;
 
@@ -32,10 +34,11 @@ namespace OpenGLEngine
         {
             vertexArray.Load();
 
-            RenderFactory.CreateBufferObject<float>(VertexData.Skybox, BufferTargetARB.ArrayBuffer);
+            vbo = RenderFactory.CreateBufferObject(BufferTargetARB.ArrayBuffer);
+            vbo.AddBufferData<float>(VertexData.Skybox);
 
             var vertexLayout = new VertexBufferLayout();
-            vertexLayout.Push(0, 3);
+            vertexLayout.Push(0, 3, 0);
 
             vertexArray.AddBufferLayout(vertexLayout);
             vertexArray.UnLoad();
@@ -50,13 +53,19 @@ namespace OpenGLEngine
             shader.Bind();
             shader.SetMatrix4("view", view);
             shader.SetMatrix4("projection", projection);
-
+            
             TextureLoader.LoadSlot(textureID, 0);
-
+            
             vertexArray.Load();
             RenderFactory.DrawArrays(36);
             vertexArray.UnLoad();
+        }
 
+        public void Dispose()
+        {
+            vertexArray.Dispose();
+            shader.Dispose();
+            vbo.Dispose();
         }
     }
 }

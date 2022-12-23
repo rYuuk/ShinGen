@@ -1,4 +1,5 @@
-﻿using Silk.NET.OpenGL;
+﻿using System.Numerics;
+using Silk.NET.OpenGL;
 
 namespace OpenGLEngine
 {
@@ -7,8 +8,8 @@ namespace OpenGLEngine
         private readonly Mesh mesh;
         private readonly VertexArray vertexArray;
 
-        private BufferObject<Vertex> vertexBufferObject = null!;
-        private BufferObject<uint> elementBufferObject = null!;
+        private BufferObject vertexBufferObject = null!;
+        private BufferObject elementBufferObject = null!;
 
         public MeshRenderer(Mesh mesh)
         {
@@ -19,16 +20,45 @@ namespace OpenGLEngine
         public void SetupMesh()
         {
             vertexArray.Load();
-
-            vertexBufferObject = RenderFactory.CreateBufferObject<Vertex>(mesh.Vertices, BufferTargetARB.ArrayBuffer);
-            elementBufferObject = RenderFactory.CreateBufferObject<uint>(mesh.Indices, BufferTargetARB.ElementArrayBuffer);
-
             var layout = new VertexBufferLayout();
-            layout.Push(0, 3);
-            layout.Push(1, 3);
-            layout.Push(2, 2);
-            layout.Push(3, 4, GLEnum.Int);
-            layout.Push(4, 4);
+
+            vertexBufferObject = RenderFactory.CreateBufferObject(BufferTargetARB.ArrayBuffer);
+
+            var totalSize = mesh.SizeOfVertices + mesh.SizeOfNormals + mesh.SizeOfTexCoords;
+            if (mesh.BoneWeights != null)
+            {
+                totalSize += mesh.BoneWeights.Length * (4 * sizeof(int) + 4 * sizeof(float));
+            }
+
+            vertexBufferObject.AddBufferData(totalSize);
+
+            var offset = 0;
+            vertexBufferObject.AddBufferSubData<Vector3>(mesh.Vertices, offset);
+            layout.Push(0, 3, offset);
+
+            offset += mesh.SizeOfVertices;
+            vertexBufferObject.AddBufferSubData<Vector3>(mesh.Normals, offset);
+            layout.Push(1, 3, offset);
+
+            offset += mesh.SizeOfNormals;
+            vertexBufferObject.AddBufferSubData<Vector2>(mesh.TexCoords, offset);
+            layout.Push(2, 2, offset);
+
+            if (mesh.BoneWeights != null)
+            {
+                var boneIndexes = mesh.BoneWeights.Select(x => x.BoneIndex).SelectMany(boneIndexes => boneIndexes).ToArray();
+                offset += mesh.SizeOfTexCoords;
+                vertexBufferObject.AddBufferSubData<int>(boneIndexes, offset);
+                layout.Push(3, 4, offset, GLEnum.Int);
+
+                var boneWeights = mesh.BoneWeights.Select(x => x.Weight).SelectMany(weights => weights).ToArray();
+                offset += boneIndexes.Length * sizeof(int);
+                vertexBufferObject.AddBufferSubData<float>(boneWeights, offset);
+                layout.Push(4, 4, offset);
+            }
+
+            elementBufferObject = RenderFactory.CreateBufferObject(BufferTargetARB.ElementArrayBuffer);
+            elementBufferObject.AddBufferData<uint>(mesh.Indices);
 
             vertexArray.AddBufferLayout(layout);
             vertexArray.UnLoad();
