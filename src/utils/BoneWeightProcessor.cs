@@ -1,24 +1,17 @@
 ﻿using System.Diagnostics;
-using System.Numerics;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 
 namespace OpenGLEngine
 {
-    public struct BoneInfo
-    {
-        public int ID;
-        public Matrix4x4 Offset;
-
-    }
 
     public class BoneWeightProcessor
     {
-        public Dictionary<string, BoneInfo> BoneInfoDict { get; }
+        public Dictionary<string, BoneInfo> BoneInfoMap { get; }
         public int BoneCounter { get; private set; }
 
         public BoneWeightProcessor()
         {
-            BoneInfoDict = new Dictionary<string, BoneInfo>();
+            BoneInfoMap = new Dictionary<string, BoneInfo>();
         }
 
         public unsafe BoneWeight[]? ProcessBoneWeight(int vertexCount, AssimpMesh* mesh)
@@ -29,6 +22,7 @@ namespace OpenGLEngine
             }
 
             var boneWeights = new SortedList<int, BoneWeight>();
+
             for (var i = 0; i < vertexCount; i++)
             {
                 boneWeights.Add(i, new BoneWeight());
@@ -41,9 +35,9 @@ namespace OpenGLEngine
 
                 string boneName = bone->MName;
 
-                if (BoneInfoDict.ContainsKey(boneName))
+                if (BoneInfoMap.ContainsKey(boneName))
                 {
-                    boneID = BoneInfoDict[boneName].ID;
+                    boneID = BoneInfoMap[boneName].ID;
                 }
                 else
                 {
@@ -53,7 +47,7 @@ namespace OpenGLEngine
                         Offset = bone->MOffsetMatrix
                     };
 
-                    BoneInfoDict.Add(boneName, newBoneInfo);
+                    BoneInfoMap.Add(boneName, newBoneInfo);
                     boneID = BoneCounter;
                     BoneCounter++;
                 }

@@ -8,23 +8,26 @@ namespace OpenGLEngine
         public readonly Vector3[] Vertices;
         public readonly Vector3[] Normals;
         public readonly Vector2[] TexCoords;
-        public readonly uint[] Indices;
         public readonly BoneWeight[] BoneWeights;
+
+        public readonly uint[] Indices;
         public readonly Texture[] Textures;
+
+        public readonly bool HaveBones;
         public readonly bool UseNormalMap;
-        public readonly bool HaveBones; 
+
 
         public Mesh(string name, Vector3[] vertices, Vector3[] normals, Vector2[] texCoords, BoneWeight[]? boneWeights, uint[] indices,
             Texture[] textures)
         {
+            Name = name;
             Vertices = vertices;
             Normals = normals;
             TexCoords = texCoords;
+            HaveBones = boneWeights != null;
+            BoneWeights = boneWeights ?? Array.Empty<BoneWeight>();
             Indices = indices;
             Textures = textures;
-            BoneWeights = boneWeights ?? Array.Empty<BoneWeight>();
-            HaveBones = boneWeights != null;
-            Name = name;
             UseNormalMap = Textures.Any(x => x.Type == "normalMap");
         }
 
@@ -37,9 +40,8 @@ namespace OpenGLEngine
 
         public int[] FlattenedBoneIndices =>
             BoneWeights.Select(x => x.BoneIndex).SelectMany(indices => indices).ToArray();
-        
+
         public float[] FlattenedBoneWeights =>
             BoneWeights.Select(x => x.Weight).SelectMany(weights => weights).ToArray();
     }
-    
 }

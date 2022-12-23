@@ -11,8 +11,8 @@ namespace OpenGLEngine
         private readonly BoneWeightProcessor boneWeightProcessor;
         private readonly TextureImporter textureImporter;
 
-        public Dictionary<string, BoneInfo> BoneInfoDict => boneWeightProcessor.BoneInfoDict;
-        public int BoneCounter => boneWeightProcessor.BoneCounter;
+        public Dictionary<string, BoneInfo> BoneInfoMap => boneWeightProcessor.BoneInfoMap;
+        public int BoneCount => boneWeightProcessor.BoneCounter;
 
         private List<Mesh> Meshes { get; } = new List<Mesh>();
 
@@ -65,7 +65,7 @@ namespace OpenGLEngine
                     scene->MMaterials[mesh->MMaterialIndex])
                 .ToList();
 
-            var boneWeights = boneWeightProcessor.ProcessBoneWeight((int)mesh->MNumVertices, mesh);
+            var boneWeights = boneWeightProcessor.ProcessBoneWeight((int) mesh->MNumVertices, mesh);
 
             var result = new Mesh(
                 mesh->MName,

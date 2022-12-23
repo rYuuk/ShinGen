@@ -4,16 +4,17 @@
     {
         private readonly List<Mesh> meshes;
         private readonly List<MeshRenderer> meshRenderers;
-        private readonly ModelImporter importer;
 
-        public Dictionary<string, BoneInfo> BoneInfoDict => importer.BoneInfoDict;
-        public int BoneCounter => importer.BoneCounter;
+        public readonly Dictionary<string, BoneInfo> BoneInfoDict;
+        public readonly int BoneCounter;
 
         public Model(string path)
         {
             meshRenderers = new List<MeshRenderer>();
-            importer = new ModelImporter();
+            var importer = new ModelImporter();
             meshes = importer.LoadModel(path);
+            BoneInfoDict = importer.BoneInfoMap;
+            BoneCounter = importer.BoneCount;
         }
 
         public void SetupMesh()
