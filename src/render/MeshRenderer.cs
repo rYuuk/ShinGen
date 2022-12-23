@@ -24,11 +24,10 @@ namespace OpenGLEngine
 
             vertexBufferObject = RenderFactory.CreateBufferObject(BufferTargetARB.ArrayBuffer);
 
-            var totalSize = mesh.SizeOfVertices + mesh.SizeOfNormals + mesh.SizeOfTexCoords;
-            if (mesh.BoneWeights != null)
-            {
-                totalSize += mesh.BoneWeights.Length * (4 * sizeof(int) + 4 * sizeof(float));
-            }
+            var totalSize = mesh.SizeOfVertices + 
+                            mesh.SizeOfNormals + 
+                            mesh.SizeOfTexCoords + 
+                            mesh.SizeOfBoneWeights;
 
             vertexBufferObject.AddBufferData(totalSize);
 
@@ -44,16 +43,14 @@ namespace OpenGLEngine
             vertexBufferObject.AddBufferSubData<Vector2>(mesh.TexCoords, offset);
             layout.Push(2, 2, offset);
 
-            if (mesh.BoneWeights != null)
+            if (mesh.HaveBones)
             {
-                var boneIndexes = mesh.BoneWeights.Select(x => x.BoneIndex).SelectMany(boneIndexes => boneIndexes).ToArray();
                 offset += mesh.SizeOfTexCoords;
-                vertexBufferObject.AddBufferSubData<int>(boneIndexes, offset);
+                vertexBufferObject.AddBufferSubData<int>(mesh.FlattenedBoneIndices, offset);
                 layout.Push(3, 4, offset, GLEnum.Int);
 
-                var boneWeights = mesh.BoneWeights.Select(x => x.Weight).SelectMany(weights => weights).ToArray();
-                offset += boneIndexes.Length * sizeof(int);
-                vertexBufferObject.AddBufferSubData<float>(boneWeights, offset);
+                offset += mesh.FlattenedBoneIndices.Length * sizeof(int);
+                vertexBufferObject.AddBufferSubData<float>(mesh.FlattenedBoneWeights, offset);
                 layout.Push(4, 4, offset);
             }
 
@@ -91,7 +88,6 @@ namespace OpenGLEngine
                 TextureLoader.Dispose(mesh.Textures[i].ID);
             }
             GC.SuppressFinalize(this);
-
         }
     }
 }
