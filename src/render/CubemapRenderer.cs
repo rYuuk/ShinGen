@@ -35,7 +35,7 @@ namespace OpenGLEngine
             vertexArray.Load();
 
             vbo = RenderFactory.CreateBufferObject(BufferTargetARB.ArrayBuffer);
-            vbo.AddBufferData<float>(VertexData.Skybox);
+            vbo.AddBufferData<float>(DummyVertices.Skybox);
 
             var vertexLayout = new VertexBufferLayout();
             vertexLayout.Push(0, 3, 0);

@@ -45,7 +45,6 @@ namespace OpenGLEngine
                 Offset =  offset,
                 Stride = count * VertexBufferElement.GetSizeOfType(type)
             });
-            // Stride += count * VertexBufferElement.GetSizeOfType(type);
         }
     }
 }

@@ -40,7 +40,6 @@ namespace OpenGLEngine
                         (uint) element.Stride,
                         (void*) element.Offset);
                 }
-
             }
         }
 

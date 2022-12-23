@@ -56,11 +56,6 @@ namespace OpenGLEngine
                 camera.Position -= camera.Up * camera.Speed * deltaTime; // Down
             }
 
-            // if (input.IsKeyPressed(Key.Space))
-            // {
-            //     camera.Position += camera.Up * camera.Speed * deltaTime;
-            // }
-
             if (input.IsKeyPressed(Key.ShiftRight))
             {
                 camera.Position -= camera.Up * camera.Speed * deltaTime;

@@ -1,6 +1,6 @@
 namespace OpenGLEngine
 {
-    public static class VertexData
+    public static class DummyVertices
     {
         public static readonly float[] CubeWithNormalAndTexCoord =
         {

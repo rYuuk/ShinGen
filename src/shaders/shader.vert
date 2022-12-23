@@ -28,26 +28,26 @@ out vec4 Weights;
 void main(void)
 {
     vec4 totalPosition = vec4(aPosition, 1.0f);
-        for(int i = 0 ; i < MAX_BONE_INFLUENCE ; i++)
+    for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+    {
+        if (aBoneIds[i] == -1)
+        continue;
+        if (aBoneIds[i] >= MAX_BONES)
         {
-            if(aBoneIds[i] == -1)
-                continue;
-            if(aBoneIds[i] >=MAX_BONES)
-            {
-                totalPosition = vec4(aPosition,1.0f);
-                break;
-            }
-            vec4 localPosition = finalBonesMatrices[aBoneIds[i]].matrix * vec4(aPosition, 1.0f);
-            totalPosition += localPosition * aWeights[i];
-            vec3 localNormal = mat3(finalBonesMatrices[aBoneIds[i]].matrix) * aNormal;
+            totalPosition = vec4(aPosition, 1.0f);
+            break;
         }
+        vec4 localPosition = finalBonesMatrices[aBoneIds[i]].matrix * vec4(aPosition, 1.0f);
+        totalPosition += localPosition * aWeights[i];
+        vec3 localNormal = mat3(finalBonesMatrices[aBoneIds[i]].matrix) * aNormal;
+    }
 
-//    totalPosition = vec4(aPosition, 1.0f);
+    //    totalPosition = vec4(aPosition, 1.0f);
     gl_Position = projection * view * model * totalPosition;
     WorldPos = vec3(model * totalPosition);
     Normal = mat3(transpose(inverse(model))) * aNormal;
     TexCoords = aTexCoords;
-    
+
     BoneIds = aBoneIds;
     Weights = aWeights;
 }

@@ -169,12 +169,6 @@ namespace OpenGLEngine
 
             return handle;
         }
-        
-        public static void Activate(int slot)
-        {
-            gl.ActiveTexture(TextureUnit.Texture0 + slot);
-        }
-
 
         // Multiple textures can be bound, if shader needs more than just one.
         public static void LoadSlot(uint handle, int slot)
