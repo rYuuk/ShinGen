@@ -47,19 +47,19 @@ namespace OpenGLEngine
             {
                 camera.Position += camera.Right * camera.Speed * deltaTime; // Right
             }
-            if (input.IsKeyPressed(Key.Space))
-            {
-                camera.Position += camera.Up * camera.Speed * deltaTime; // Up
-            }
+            // if (input.IsKeyPressed(Key.Space))
+            // {
+            //     camera.Position += camera.Up * camera.Speed * deltaTime; // Up
+            // }
             if (input.IsKeyPressed(Key.ShiftLeft))
             {
                 camera.Position -= camera.Up * camera.Speed * deltaTime; // Down
             }
 
-            if (input.IsKeyPressed(Key.Space))
-            {
-                camera.Position += camera.Up * camera.Speed * deltaTime;
-            }
+            // if (input.IsKeyPressed(Key.Space))
+            // {
+            //     camera.Position += camera.Up * camera.Speed * deltaTime;
+            // }
 
             if (input.IsKeyPressed(Key.ShiftRight))
             {

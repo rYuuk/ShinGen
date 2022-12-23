@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -21,12 +22,16 @@ namespace OpenGLEngine
 
         private Shader avatarShader = null!;
         private Model avatar = null!;
+        private Animator animator = null!;
 
         private Shader platformShader = null!;
         private Model platform = null!;
 
         private bool firstMove;
         private float lastPos;
+
+        private readonly Stopwatch stopwatch;
+        private float ElapsedSeconds => stopwatch.ElapsedMilliseconds / 1000f;
 
         private readonly Vector3[] lightPositions =
         {
@@ -43,6 +48,9 @@ namespace OpenGLEngine
 
         public ModelApplication()
         {
+            stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             var options = WindowOptions.Default;
             options.Size = new Vector2D<int>(1280, 720);
             options.Title = "OpenGLEngine";
@@ -76,8 +84,12 @@ namespace OpenGLEngine
             window.FocusChanged -= OnFocusChanged;
         }
 
+        private IKeyboard windowInputKeyboard;
+
         private void OnLoad()
         {
+            Console.WriteLine($"Loading started: {ElapsedSeconds}s");
+
             gl = GL.GetApi(window);
 
             var windowInput = window.CreateInput();
@@ -93,35 +105,67 @@ namespace OpenGLEngine
                 windowInput.Mice[i].Cursor.CursorMode = CursorMode.Raw;
                 windowInput.Mice[i].MouseMove += OnMouseMove;
                 windowInput.Mice[i].Scroll += OnMouseWheel;
+                
             }
 
-            // Initialize the camera so that it is 3 units back from where the rectangle is.
+            windowInput.Keyboards[0].KeyUp += OnKeyUp;
+
+                // Initialize the camera so that it is 3 units back from where the rectangle is.
             camera = new Camera(new Vector3(-1, 0.8f, 3), window.Size.X / (float) window.Size.Y, 1f, 0.1f);
             // To make the mouse cursor invisible and captured so to have proper FPS-camera movement.
-            input = new Input(camera, windowInput.Keyboards[0], windowInput.Mice[0], window.Close);
+            windowInputKeyboard = windowInput.Keyboards[0];
+            input = new Input(camera, windowInputKeyboard, windowInput.Mice[0], window.Close);
 
             avatarShader = new Shader(
                 gl,
                 "src/shaders/shader.vert",
                 "src/shaders/shader.frag");
 
+            Console.WriteLine($"Avatar Shader Loaded: {ElapsedSeconds}s");
+
             platformShader = new Shader(
                 gl,
                 "src/shaders/shader.vert",
                 "src/shaders/shader.frag");
 
-            cubeRenderer = new CubeRenderer();
+            Console.WriteLine($"Platform Shader Loaded: {ElapsedSeconds}s");
+
+            // cubeRenderer = new CubeRenderer();
+
             cubemapRenderer = new CubemapRenderer();
+            Console.WriteLine($"Cubemap Shader Loaded: {ElapsedSeconds}s");
 
             // cubeRenderer.Load();
             cubemapRenderer.Load();
+            Console.WriteLine($"Cubemap loaded: {ElapsedSeconds}s");
 
-            avatar = new Model("Resources/Avatar/MultiMesh/Avatar.glb");
-            // avatar = new Model("Resources/Avatar/SingleMesh/Avatar.glb");
+            // avatar = new Model("Resources/Avatar/MultiMesh/Avatar.glb");
+            avatar = new Model("Resources/Avatar/SingleMesh/Avatar.glb");
             avatar.SetupMesh();
+
+            var animation = new AnimationLoader("resources/Avatar/SingleMesh/walking.glb", avatar);
+            animator = new Animator(animation);
+
+            Console.WriteLine($"Avatar loaded: {ElapsedSeconds}s");
 
             platform = new Model("Resources/Platform.glb");
             platform.SetupMesh();
+
+            Console.WriteLine($"Platform loaded: {ElapsedSeconds}s");
+            stopwatch.Stop();
+        }
+
+        private void OnKeyUp(IKeyboard arg1, Key arg2, int arg3)
+        {
+            if (arg2 == Key.Space)
+            {
+                displayBoneIndex++;
+                Console.WriteLine(displayBoneIndex);
+                if (displayBoneIndex > 66)
+                {
+                    displayBoneIndex = 0;
+                }
+            }
         }
 
         private void OnUnload()
@@ -129,28 +173,39 @@ namespace OpenGLEngine
             avatarShader.Unbind();
             avatarShader.Dispose();
             avatar.Dispose();
+            platform.Dispose();
+            cubemapRenderer.Dispose();
         }
 
         private void OnRender(double time)
         {
             RenderHelper.Clear();
 
+            animator.UpdateAnimation(time);
+
             avatarShader.Bind();
+
             avatarShader.SetMatrix4("view", camera.GetViewMatrix());
             avatarShader.SetMatrix4("projection", camera.GetProjectionMatrix());
             avatarShader.SetVector3("camPos", camera.Position);
 
+            var transforms = animator.FinalBoneMatrices;
+            // for (var i = 0; i < transforms.Count; i++)
+            // {
+            // avatarShader.SetMatrix4("finalBonesMatrices[" + i + "].matrix", transforms[i]);
+            // }
             var modelMatrix = Matrix4x4.CreateScale(1f);
             modelMatrix *= Matrix4x4.CreateTranslation(0.0f, 0.0f, 0f);
             modelMatrix *= Matrix4x4.CreateRotationY(MathHelper.DegreesToRadians(degrees));
             avatarShader.SetMatrix4("model", modelMatrix);
 
-            for (var i = 0; i < lightPositions.Length; ++i)
+            for (var i = 0; i < lightPositions.Length; i++)
             {
                 avatarShader.SetVector3("lightPositions[" + i + "]", lightPositions[i]);
                 avatarShader.SetVector3("lightColors[" + i + "]", lightColors[i]);
             }
-
+            avatarShader.SetInt("displayBoneIndex", displayBoneIndex);
+            
             avatar.Draw(avatarShader);
 
             platformShader.Bind();
@@ -211,12 +266,15 @@ namespace OpenGLEngine
             }
         }
 
+        private int displayBoneIndex;
+
         private void OnUpdate(double time)
         {
             if (!isFocused)
             {
                 return;
             }
+            
             input.Update((float) time);
         }
 

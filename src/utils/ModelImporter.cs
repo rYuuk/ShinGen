@@ -7,10 +7,14 @@ namespace OpenGLEngine
     public class ModelImporter
     {
         private readonly Assimp assimp;
-        private List<Mesh> Meshes { get; } = new List<Mesh>();
 
         private readonly BoneWeightProcessor boneWeightProcessor;
         private readonly TextureImporter textureImporter;
+
+        public Dictionary<string, BoneInfo> BoneInfoDict => boneWeightProcessor.BoneInfoDict;
+        public int BoneCounter => boneWeightProcessor.BoneCounter;
+
+        private List<Mesh> Meshes { get; } = new List<Mesh>();
 
         public ModelImporter()
         {
@@ -61,54 +65,56 @@ namespace OpenGLEngine
                     scene->MMaterials[mesh->MMaterialIndex])
                 .ToList();
 
-            boneWeightProcessor.ProcessBoneWeight(vertices, mesh);
+            var boneWeights = boneWeightProcessor.ProcessBoneWeight((int)mesh->MNumVertices, mesh);
 
             var result = new Mesh(
                 mesh->MName,
-                vertices.ToArray(),
+                vertices.Item1,
+                vertices.Item2,
+                vertices.Item3,
+                boneWeights,
                 indices.ToArray(),
                 textures.ToArray());
 
             return result;
         }
 
-        private unsafe List<Vertex> ProcessVertices(AssimpMesh* mesh)
+        private unsafe (Vector3[], Vector3[], Vector2[]) ProcessVertices(AssimpMesh* mesh)
         {
-            var vertices = new List<Vertex>();
+            var vertices = new List<Vector3>();
+            var normals = new List<Vector3>();
+            var texCoords = new List<Vector2>();
             for (var i = 0; i < mesh->MNumVertices; i++)
             {
-                var vertex = new Vertex();
-                var vector = new Vector3();
-                vector.X = mesh->MVertices[i].X;
-                vector.Y = mesh->MVertices[i].Y;
-                vector.Z = mesh->MVertices[i].Z;
-                vertex.Position = vector;
+                var vertex = new Vector3();
+                vertex.X = mesh->MVertices[i].X;
+                vertex.Y = mesh->MVertices[i].Y;
+                vertex.Z = mesh->MVertices[i].Z;
+                vertices.Add(vertex);
 
                 if (mesh->MNormals != null)
                 {
-                    vector.X = mesh->MNormals[i].X;
-                    vector.Y = mesh->MNormals[i].Y;
-                    vector.Z = mesh->MNormals[i].Z;
-                    vertex.Normal = vector;
+                    var normal = new Vector3();
+                    normal.X = mesh->MNormals[i].X;
+                    normal.Y = mesh->MNormals[i].Y;
+                    normal.Z = mesh->MNormals[i].Z;
+                    normals.Add(normal);
                 }
 
                 if (mesh->MTextureCoords[0] != null)
                 {
-                    var vec = new Vector2()
+                    var texCoord = new Vector2()
                     {
                         X = mesh->MTextureCoords[0][i].X,
                         Y = mesh->MTextureCoords[0][i].Y
                     };
-                    vertex.TexCoords = vec;
+                    texCoords.Add(texCoord);
                 }
                 else
-                    vertex.TexCoords = new Vector2(0.0f, 0.0f);
-
-                boneWeightProcessor.SetVertexBoneDataToDefault(vertex);
-                vertices.Add(vertex);
+                    texCoords.Add(Vector2.Zero);
             }
 
-            return vertices;
+            return (vertices.ToArray(), normals.ToArray(), texCoords.ToArray());
         }
 
         private unsafe List<uint> ProcessIndices(AssimpMesh* mesh)

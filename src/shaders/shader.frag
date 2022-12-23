@@ -3,6 +3,9 @@ out vec4 FragColor;
 in vec2 TexCoords;
 in vec3 WorldPos;
 in vec3 Normal;
+flat in ivec4 BoneIds;
+in vec4 Weights;
+
 
 // material parameters
 uniform sampler2D albedoMap;
@@ -16,6 +19,8 @@ uniform vec3 lightPositions[4];
 uniform vec3 lightColors[4];
 
 uniform vec3 camPos;
+
+uniform int displayBoneIndex;
 
 const float PI = 3.14159265359;
 // ----------------------------------------------------------------------------
@@ -105,7 +110,7 @@ void main()
 
     // reflectance equation
     vec3 Lo = vec3(0.0);
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 4; i++)
     {
         // calculate per-light radiance
         vec3 L = normalize(lightPositions[i] - WorldPos);
@@ -152,5 +157,24 @@ void main()
     // gamma correct
     color = pow(color, vec3(1.0 / 2.2));
 
-    FragColor = vec4(color, 1.0);
+    bool found = false;
+
+    for (int i = 0;  i < 4; i++) {
+        if (BoneIds[i] == displayBoneIndex) {
+            if (Weights[i] >= 0.7) {
+                FragColor = vec4(1.0, 0.0, 0.0, 1.0) * Weights[i];
+            } else if (Weights[i] >= 0.4 && Weights[i] <= 0.6) {
+                FragColor = vec4(0.0, 1.0, 0.0, 1.0) * Weights[i];
+            } else if (Weights[i] >= 0.1) {
+                FragColor = vec4(1.0, 1.0, 0.0, 1.0) * Weights[i];
+            }
+
+            found = true;
+        }
+    }
+
+    if (!found)
+    {
+        FragColor = vec4(color, 1.0);
+    }
 }
