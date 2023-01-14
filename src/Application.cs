@@ -11,24 +11,16 @@ namespace OpenGLEngine
     {
         private readonly IWindow window;
 
-        private static GL gl = null!;
+        private GL gl = null!;
 
         private Input input = null!;
-        // Instance of the camera class to manage the view and projection matrix code.
         private Camera camera = null!;
 
         // private CubeRenderer cubeRenderer = null!;
         private CubemapRenderer cubemapRenderer = null!;
 
-        private Shader avatarShader = null!;
-        private Model avatar = null!;
-        private Animator animator = null!;
-
-        private Shader platformShader = null!;
+        private AnimatedModel avatar = null!;
         private Model platform = null!;
-
-        private bool enableAnimation = false;
-        private bool debugShowBones = false;
 
         private bool firstMove;
         private float lastPos;
@@ -48,7 +40,6 @@ namespace OpenGLEngine
 
         private bool isFocused = true;
         private float degrees;
-        private int displayBoneIndex;
 
         public ModelApplication()
         {
@@ -88,8 +79,6 @@ namespace OpenGLEngine
             window.FocusChanged -= OnFocusChanged;
         }
 
-        private IKeyboard windowInputKeyboard;
-
         private void OnLoad()
         {
             Console.WriteLine($"Loading started: {ElapsedSeconds}s");
@@ -109,49 +98,24 @@ namespace OpenGLEngine
                 windowInput.Mice[i].Cursor.CursorMode = CursorMode.Raw;
                 windowInput.Mice[i].MouseMove += OnMouseMove;
                 windowInput.Mice[i].Scroll += OnMouseWheel;
-
             }
 
             windowInput.Keyboards[0].KeyUp += OnKeyUp;
 
-            // Initialize the camera so that it is 3 units back from where the rectangle is.
             camera = new Camera(new Vector3(-1, 0.8f, 3), window.Size.X / (float) window.Size.Y, 1f, 0.1f);
-            // To make the mouse cursor invisible and captured so to have proper FPS-camera movement.
-            windowInputKeyboard = windowInput.Keyboards[0];
-            input = new Input(camera, windowInputKeyboard, windowInput.Mice[0], window.Close);
-
-            avatarShader = new Shader(
-                gl,
-                "src/shaders/shader.vert",
-                "src/shaders/shader.frag");
-
-            Console.WriteLine($"Avatar Shader Loaded: {ElapsedSeconds}s");
-
-            platformShader = new Shader(
-                gl,
-                "src/shaders/shader.vert",
-                "src/shaders/shader.frag");
-
-            Console.WriteLine($"Platform Shader Loaded: {ElapsedSeconds}s");
+            input = new Input(camera, windowInput.Keyboards[0], windowInput.Mice[0], window.Close);
 
             // cubeRenderer = new CubeRenderer();
+            // cubeRenderer.Load();
 
             cubemapRenderer = new CubemapRenderer();
-            Console.WriteLine($"Cubemap Shader Loaded: {ElapsedSeconds}s");
-
-            // cubeRenderer.Load();
             cubemapRenderer.Load();
+
             Console.WriteLine($"Cubemap loaded: {ElapsedSeconds}s");
 
             // avatar = new Model("Resources/Avatar/MultiMesh/Avatar.glb");
-            avatar = new Model("Resources/Avatar/SingleMesh/Avatar.glb");
+            avatar = new AnimatedModel("Resources/Avatar/SingleMesh/Avatar.glb");
             avatar.SetupMesh();
-
-            if (enableAnimation)
-            {
-                var animation = new AnimationLoader("resources/Avatar/SingleMesh/Walking.dae", avatar);
-                animator = new Animator(animation);
-            }
 
             Console.WriteLine($"Avatar loaded: {ElapsedSeconds}s");
 
@@ -162,22 +126,8 @@ namespace OpenGLEngine
             stopwatch.Stop();
         }
 
-        private void OnKeyUp(IKeyboard arg1, Key arg2, int arg3)
-        {
-            if (debugShowBones && arg2 == Key.B)
-            {
-                displayBoneIndex++;
-                if (displayBoneIndex > 66)
-                {
-                    displayBoneIndex = 0;
-                }
-            }
-        }
-
         private void OnUnload()
         {
-            avatarShader.Unbind();
-            avatarShader.Dispose();
             avatar.Dispose();
             platform.Dispose();
             cubemapRenderer.Dispose();
@@ -187,62 +137,18 @@ namespace OpenGLEngine
         {
             RenderHelper.Clear();
 
-            if (enableAnimation)
-            {
-                animator.UpdateAnimation(time);
-            }
+            avatar.Rotation = new Vector3(0, MathHelper.DegreesToRadians(degrees), 0);
+            avatar.Light(lightPositions, lightColors);
+            avatar.Animate(time);
 
-            avatarShader.Bind();
+            avatar.SetMatrices(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
+            avatar.Draw();
 
-            avatarShader.SetMatrix4("view", camera.GetViewMatrix());
-            avatarShader.SetMatrix4("projection", camera.GetProjectionMatrix());
-            avatarShader.SetVector3("camPos", camera.Position);
-
-            avatarShader.SetInt("enableAnimation", enableAnimation ? 1 : 0);
-            if (enableAnimation)
-            {
-                var transforms = animator.FinalBoneMatrices;
-                for (var i = 0; i < transforms.Count; i++)
-                {
-                    avatarShader.SetMatrix4("finalBonesMatrices[" + i + "].matrix", transforms[i]);
-                }
-            }
-
-            var modelMatrix = Matrix4x4.CreateScale(1f);
-            modelMatrix *= Matrix4x4.CreateRotationY(MathHelper.DegreesToRadians(degrees));
-            modelMatrix *= Matrix4x4.CreateTranslation(0.0f, 0.0f, 0f);
-            avatarShader.SetMatrix4("model", modelMatrix);
-
-            for (var i = 0; i < lightPositions.Length; i++)
-            {
-                avatarShader.SetVector3("lightPositions[" + i + "]", lightPositions[i]);
-                avatarShader.SetVector3("lightColors[" + i + "]", lightColors[i]);
-            }
-
-            avatarShader.SetInt("displayBones", debugShowBones ? 1 : 0);
-            if (debugShowBones)
-            {
-                avatarShader.SetInt("displayBoneIndex", displayBoneIndex);
-            }
-
-            avatar.Draw(avatarShader);
-
-            platformShader.Bind();
-            platformShader.SetMatrix4("view", camera.GetViewMatrix());
-            platformShader.SetMatrix4("projection", camera.GetProjectionMatrix());
-            platformShader.SetVector3("camPos", camera.Position);
-
-            modelMatrix = Matrix4x4.CreateScale(0.1f);
-            modelMatrix *= Matrix4x4.CreateTranslation(0.0f, -0.12f, 0.0f);
-            platformShader.SetMatrix4("model", modelMatrix);
-
-            for (var i = 0; i < lightPositions.Length; i++)
-            {
-                platformShader.SetVector3("lightPositions[" + i + "]", lightPositions[i]);
-                platformShader.SetVector3("lightColors[" + i + "]", lightColors[i]);
-            }
-
-            platform.Draw(platformShader);
+            platform.Scale = Vector3.One * 0.1f;
+            platform.Position = new Vector3(0.0f, -0.12f, 0.0f);
+            platform.Light(lightPositions, lightColors);
+            platform.SetMatrices(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
+            platform.Draw();
 
             // cubeRenderer.Draw(camera.GetViewMatrix(), camera.GetProjectionMatrix());
 
@@ -279,13 +185,23 @@ namespace OpenGLEngine
                 {
                     var deltaX = position.X - lastPos;
                     lastPos = position.X;
-
-                    degrees += deltaX * 5;
+                    degrees += deltaX * 10;
                 }
             }
         }
 
-
+        private void OnKeyUp(IKeyboard arg1, Key arg2, int arg3)
+        {
+            if (AnimatedModel.DEBUG_BONES && arg2 == Key.B)
+            {
+                avatar.DebugBoneIndex++;
+                if (avatar.DebugBoneIndex > 66)
+                {
+                    avatar.DebugBoneIndex = 0;
+                }
+            }
+        }
+        
         private void OnUpdate(double time)
         {
             if (!isFocused)

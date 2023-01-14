@@ -12,8 +12,8 @@ namespace OpenGLEngine
         public BoneAnimationNodeData RootAnimationNode { get; }
 
         private readonly List<Bone> bones;
-        
-        public AnimationLoader(string path, Model model)
+
+        public AnimationLoader(string path,IDictionary<string, BoneInfo> modelBoneInfoDict, int boneCount)
         {
             var assimp = Assimp.GetApi();
             bones = new List<Bone>();
@@ -26,7 +26,7 @@ namespace OpenGLEngine
                 Duration = assimpAnimation->MDuration;
                 TicksPerSecond = assimpAnimation->MTicksPerSecond;
                 RootAnimationNode = ReadHierarchyData(scene->MRootNode);
-                ReadMissingBones(assimpAnimation, model);
+                ReadMissingBones(assimpAnimation, modelBoneInfoDict, boneCount);
             }
         }
 
@@ -37,12 +37,12 @@ namespace OpenGLEngine
             Debug.Assert(node != null);
 
             var name = node->MName.ToString();
-            
+
             if (name.Contains("mixamorig"))
             {
                 name = name.Substring("mixamorig_".Length);
             }
-            
+
             var boneAnimationNodeData = new BoneAnimationNodeData()
             {
                 Name = name,
@@ -52,17 +52,16 @@ namespace OpenGLEngine
 
             for (var i = 0; i < node->MNumChildren; i++)
             {
-                boneAnimationNodeData.Children.Add( ReadHierarchyData(node->MChildren[i]));
+                boneAnimationNodeData.Children.Add(ReadHierarchyData(node->MChildren[i]));
             }
 
             return boneAnimationNodeData;
         }
 
-        private unsafe void ReadMissingBones(Animation* assimpAnimation, Model model)
+        private unsafe void ReadMissingBones(Animation* assimpAnimation, IDictionary<string, BoneInfo> modelBoneInfoDict, int boneCount)
         {
             var size = assimpAnimation->MNumChannels;
-            var boneInfoDict = new Dictionary<string, BoneInfo>(model.BoneInfoDict);
-            var boneCount = model.BoneCounter;
+            var boneInfoDict = new Dictionary<string, BoneInfo>(modelBoneInfoDict);
 
             for (var i = 0; i < size; i++)
             {

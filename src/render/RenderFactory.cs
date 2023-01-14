@@ -8,7 +8,7 @@ namespace OpenGLEngine
 
         public static void SetRenderer(GL glRender) =>
             gl = glRender;
-
+        
         public static VertexArray CreateVertexArray()
             => new VertexArray(gl);
 

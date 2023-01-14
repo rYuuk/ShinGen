@@ -106,7 +106,7 @@ namespace OpenGLEngine
 
                 if (mesh->MTextureCoords[0] != null)
                 {
-                    var texCoord = new Vector2()
+                    var texCoord = new Vector2
                     {
                         X = mesh->MTextureCoords[0][i].X,
                         Y = mesh->MTextureCoords[0][i].Y
