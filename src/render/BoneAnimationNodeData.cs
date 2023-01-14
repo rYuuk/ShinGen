@@ -4,15 +4,8 @@ namespace OpenGLEngine
 {
     public struct BoneAnimationNodeData
     {
-        public readonly List<BoneAnimationNodeData> Children;
-
-        public string Name = default;
-        public Matrix4x4 Transformation = default;
-        public uint ChildrenCount = default;
-
-        public BoneAnimationNodeData()
-        {
-            Children = new List<BoneAnimationNodeData>();
-        }
+        public string Name;
+        public Matrix4x4 Transformation;
+        public List<BoneAnimationNodeData> Children;
     }
 }

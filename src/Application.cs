@@ -17,7 +17,7 @@ namespace OpenGLEngine
         // Instance of the camera class to manage the view and projection matrix code.
         private Camera camera = null!;
 
-        private CubeRenderer cubeRenderer = null!;
+        // private CubeRenderer cubeRenderer = null!;
         private CubemapRenderer cubemapRenderer = null!;
 
         private Shader avatarShader = null!;
@@ -26,6 +26,9 @@ namespace OpenGLEngine
 
         private Shader platformShader = null!;
         private Model platform = null!;
+
+        private bool enableAnimation = true;
+        private bool debugShowBones = false;
 
         private bool firstMove;
         private float lastPos;
@@ -45,6 +48,7 @@ namespace OpenGLEngine
 
         private bool isFocused = true;
         private float degrees;
+        private int displayBoneIndex;
 
         public ModelApplication()
         {
@@ -105,12 +109,12 @@ namespace OpenGLEngine
                 windowInput.Mice[i].Cursor.CursorMode = CursorMode.Raw;
                 windowInput.Mice[i].MouseMove += OnMouseMove;
                 windowInput.Mice[i].Scroll += OnMouseWheel;
-                
+
             }
 
             windowInput.Keyboards[0].KeyUp += OnKeyUp;
 
-                // Initialize the camera so that it is 3 units back from where the rectangle is.
+            // Initialize the camera so that it is 3 units back from where the rectangle is.
             camera = new Camera(new Vector3(-1, 0.8f, 3), window.Size.X / (float) window.Size.Y, 1f, 0.1f);
             // To make the mouse cursor invisible and captured so to have proper FPS-camera movement.
             windowInputKeyboard = windowInput.Keyboards[0];
@@ -143,8 +147,11 @@ namespace OpenGLEngine
             avatar = new Model("Resources/Avatar/SingleMesh/Avatar.glb");
             avatar.SetupMesh();
 
-            var animation = new AnimationLoader("resources/Avatar/SingleMesh/walking.glb", avatar);
-            animator = new Animator(animation);
+            if (enableAnimation)
+            {
+                var animation = new AnimationLoader("resources/Avatar/SingleMesh/Walking.dae", avatar);
+                animator = new Animator(animation);
+            }
 
             Console.WriteLine($"Avatar loaded: {ElapsedSeconds}s");
 
@@ -157,10 +164,9 @@ namespace OpenGLEngine
 
         private void OnKeyUp(IKeyboard arg1, Key arg2, int arg3)
         {
-            if (arg2 == Key.Space)
+            if (debugShowBones && arg2 == Key.B)
             {
                 displayBoneIndex++;
-                Console.WriteLine(displayBoneIndex);
                 if (displayBoneIndex > 66)
                 {
                     displayBoneIndex = 0;
@@ -181,7 +187,10 @@ namespace OpenGLEngine
         {
             RenderHelper.Clear();
 
-            animator.UpdateAnimation(time);
+            if (enableAnimation)
+            {
+                animator.UpdateAnimation(time);
+            }
 
             avatarShader.Bind();
 
@@ -189,14 +198,19 @@ namespace OpenGLEngine
             avatarShader.SetMatrix4("projection", camera.GetProjectionMatrix());
             avatarShader.SetVector3("camPos", camera.Position);
 
-            var transforms = animator.FinalBoneMatrices;
-            // for (var i = 0; i < transforms.Count; i++)
-            // {
-            // avatarShader.SetMatrix4("finalBonesMatrices[" + i + "].matrix", transforms[i]);
-            // }
+            avatarShader.SetInt("enableAnimation", enableAnimation ? 1 : 0);
+            if (enableAnimation)
+            {
+                var transforms = animator.FinalBoneMatrices;
+                for (var i = 0; i < transforms.Count; i++)
+                {
+                    avatarShader.SetMatrix4("finalBonesMatrices[" + i + "].matrix", transforms[i]);
+                }
+            }
+
             var modelMatrix = Matrix4x4.CreateScale(1f);
-            modelMatrix *= Matrix4x4.CreateTranslation(0.0f, 0.0f, 0f);
             modelMatrix *= Matrix4x4.CreateRotationY(MathHelper.DegreesToRadians(degrees));
+            modelMatrix *= Matrix4x4.CreateTranslation(0.0f, 0.0f, 0f);
             avatarShader.SetMatrix4("model", modelMatrix);
 
             for (var i = 0; i < lightPositions.Length; i++)
@@ -204,8 +218,13 @@ namespace OpenGLEngine
                 avatarShader.SetVector3("lightPositions[" + i + "]", lightPositions[i]);
                 avatarShader.SetVector3("lightColors[" + i + "]", lightColors[i]);
             }
-            avatarShader.SetInt("displayBoneIndex", displayBoneIndex);
-            
+
+            avatarShader.SetInt("displayBones", debugShowBones ? 1 : 0);
+            if (debugShowBones)
+            {
+                avatarShader.SetInt("displayBoneIndex", displayBoneIndex);
+            }
+
             avatar.Draw(avatarShader);
 
             platformShader.Bind();
@@ -217,7 +236,7 @@ namespace OpenGLEngine
             modelMatrix *= Matrix4x4.CreateTranslation(0.0f, -0.12f, 0.0f);
             platformShader.SetMatrix4("model", modelMatrix);
 
-            for (var i = 0; i < lightPositions.Length; ++i)
+            for (var i = 0; i < lightPositions.Length; i++)
             {
                 platformShader.SetVector3("lightPositions[" + i + "]", lightPositions[i]);
                 platformShader.SetVector3("lightColors[" + i + "]", lightColors[i]);
@@ -266,7 +285,6 @@ namespace OpenGLEngine
             }
         }
 
-        private int displayBoneIndex;
 
         private void OnUpdate(double time)
         {
@@ -274,7 +292,7 @@ namespace OpenGLEngine
             {
                 return;
             }
-            
+
             input.Update((float) time);
         }
 

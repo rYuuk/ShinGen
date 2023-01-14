@@ -20,6 +20,7 @@ uniform vec3 lightColors[4];
 
 uniform vec3 camPos;
 
+uniform bool displayBones;
 uniform int displayBoneIndex;
 
 const float PI = 3.14159265359;
@@ -158,18 +159,20 @@ void main()
     color = pow(color, vec3(1.0 / 2.2));
 
     bool found = false;
+    if (displayBones)
+    {
+        for (int i = 0;  i < 4; i++) {
+            if (BoneIds[i] == displayBoneIndex) {
+                if (Weights[i] >= 0.7) {
+                    FragColor = vec4(1.0, 0.0, 0.0, 1.0) * Weights[i];
+                } else if (Weights[i] >= 0.4 && Weights[i] <= 0.6) {
+                    FragColor = vec4(0.0, 1.0, 0.0, 1.0) * Weights[i];
+                } else if (Weights[i] >= 0.1) {
+                    FragColor = vec4(1.0, 1.0, 0.0, 1.0) * Weights[i];
+                }
 
-    for (int i = 0;  i < 4; i++) {
-        if (BoneIds[i] == displayBoneIndex) {
-            if (Weights[i] >= 0.7) {
-                FragColor = vec4(1.0, 0.0, 0.0, 1.0) * Weights[i];
-            } else if (Weights[i] >= 0.4 && Weights[i] <= 0.6) {
-                FragColor = vec4(0.0, 1.0, 0.0, 1.0) * Weights[i];
-            } else if (Weights[i] >= 0.1) {
-                FragColor = vec4(1.0, 1.0, 0.0, 1.0) * Weights[i];
+                found = true;
             }
-
-            found = true;
         }
     }
 

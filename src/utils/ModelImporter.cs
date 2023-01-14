@@ -14,6 +14,8 @@ namespace OpenGLEngine
         public Dictionary<string, BoneInfo> BoneInfoMap => boneWeightProcessor.BoneInfoMap;
         public int BoneCount => boneWeightProcessor.BoneCounter;
 
+        public Matrix4x4 GlobalInverseTransformation;
+
         private List<Mesh> Meshes { get; } = new List<Mesh>();
 
         public ModelImporter()
@@ -35,6 +37,7 @@ namespace OpenGLEngine
                     throw new Exception(error);
                 }
 
+                Matrix4x4.Invert(scene->MRootNode->MTransformation, out GlobalInverseTransformation);
                 ProcessNode(scene->MRootNode, scene);
             }
 

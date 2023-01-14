@@ -5,7 +5,6 @@ namespace OpenGLEngine
     public class Animator
     {
         private readonly AnimationLoader animationLoader;
-
         public List<Matrix4x4> FinalBoneMatrices { get; }
         private double currentTime;
 
@@ -21,8 +20,8 @@ namespace OpenGLEngine
 
         public void UpdateAnimation(double deltaTime)
         {
-            currentTime +=  deltaTime;
-            if (currentTime >= 1)
+            currentTime += deltaTime * 250;
+            if (currentTime >= animationLoader.Duration)
             {
                 currentTime = 0;
             }
@@ -40,17 +39,17 @@ namespace OpenGLEngine
                 nodeTransform = bone.Update(currentTime);
             }
 
-            var globalTransformation = parentTransform * nodeTransform;
+            var globalTransformation = nodeTransform * parentTransform;
+            var boneInfoMap = animationLoader.BoneInfoMap;
 
-            var boneInfoMap = animationLoader.BoneInfoDict;
             if (boneInfoMap.ContainsKey(nodeName))
             {
                 var index = boneInfoMap[nodeName].ID;
                 var offset = boneInfoMap[nodeName].Offset;
-                FinalBoneMatrices[index] = globalTransformation * offset;
+                FinalBoneMatrices[index] = offset * globalTransformation;
             }
 
-            for (var i = 0; i < animationNode.ChildrenCount; i++)
+            for (var i = 0; i < animationNode.Children.Count; i++)
                 CalculateBoneTransform(animationNode.Children[i], globalTransformation);
         }
     }

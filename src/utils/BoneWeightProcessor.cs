@@ -3,7 +3,6 @@ using AssimpMesh = Silk.NET.Assimp.Mesh;
 
 namespace OpenGLEngine
 {
-
     public class BoneWeightProcessor
     {
         public Dictionary<string, BoneInfo> BoneInfoMap { get; }

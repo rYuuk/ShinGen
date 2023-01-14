@@ -5,18 +5,18 @@ namespace OpenGLEngine
 {
     public class AnimationLoader
     {
-        public readonly List<Bone> Bones;
-
         public double Duration { get; }
         public double TicksPerSecond { get; }
-        public Dictionary<string, BoneInfo> BoneInfoDict { get; private set; }
+        public Dictionary<string, BoneInfo> BoneInfoMap { get; private set; }
 
-        public BoneAnimationNodeData RootAnimationNode;
+        public BoneAnimationNodeData RootAnimationNode { get; }
 
+        private readonly List<Bone> bones;
+        
         public AnimationLoader(string path, Model model)
         {
-            Bones = new List<Bone>();
             var assimp = Assimp.GetApi();
+            bones = new List<Bone>();
 
             unsafe
             {
@@ -25,42 +25,42 @@ namespace OpenGLEngine
                 var assimpAnimation = scene->MAnimations[0];
                 Duration = assimpAnimation->MDuration;
                 TicksPerSecond = assimpAnimation->MTicksPerSecond;
-                RootAnimationNode = new BoneAnimationNodeData();
-                ReadHierarchyData(ref RootAnimationNode, scene->MRootNode);
+                RootAnimationNode = ReadHierarchyData(scene->MRootNode);
                 ReadMissingBones(assimpAnimation, model);
             }
         }
 
-        public Bone? FindBone(string name)
-        {
-            return Bones.FirstOrDefault(x => x.Name == name);
-        }
+        public Bone? FindBone(string name) => bones.FirstOrDefault(x => x.Name == name);
 
-        private unsafe void ReadHierarchyData(ref BoneAnimationNodeData boneAnimationNodeData, Node* node)
+        private unsafe BoneAnimationNodeData ReadHierarchyData(Node* node)
         {
             Debug.Assert(node != null);
 
             var name = node->MName.ToString();
+            
             if (name.Contains("mixamorig"))
             {
                 name = name.Substring("mixamorig_".Length);
             }
-            boneAnimationNodeData.Name = name;
-            boneAnimationNodeData.Transformation = node->MTransformation;
-            boneAnimationNodeData.ChildrenCount = node->MNumChildren;
+            
+            var boneAnimationNodeData = new BoneAnimationNodeData()
+            {
+                Name = name,
+                Transformation = node->MTransformation,
+                Children = new List<BoneAnimationNodeData>()
+            };
 
             for (var i = 0; i < node->MNumChildren; i++)
             {
-                var newNode = new BoneAnimationNodeData();
-                ReadHierarchyData(ref newNode, node->MChildren[i]);
-                boneAnimationNodeData.Children.Add(newNode);
+                boneAnimationNodeData.Children.Add( ReadHierarchyData(node->MChildren[i]));
             }
+
+            return boneAnimationNodeData;
         }
 
         private unsafe void ReadMissingBones(Animation* assimpAnimation, Model model)
         {
             var size = assimpAnimation->MNumChannels;
-
             var boneInfoDict = new Dictionary<string, BoneInfo>(model.BoneInfoDict);
             var boneCount = model.BoneCounter;
 
@@ -75,7 +75,7 @@ namespace OpenGLEngine
                         { ID = boneCount });
                     boneCount++;
                 }
-                Bones.Add(new Bone(
+                bones.Add(new Bone(
                         boneName,
                         boneInfoDict[boneName].ID,
                         GetPositionKeys(channel, channel->MNumPositionKeys),
@@ -84,26 +84,18 @@ namespace OpenGLEngine
                     )
                 );
             }
-            BoneInfoDict = boneInfoDict;
+            BoneInfoMap = boneInfoDict;
         }
-
-        private double max;
 
         private unsafe KeyPosition[] GetPositionKeys(NodeAnim* nodeAnim, uint positionsCount)
         {
             var positions = new KeyPosition[positionsCount];
             for (var i = 0; i < positionsCount; i++)
             {
-                var position = nodeAnim->MPositionKeys[i].MValue;
-                var timestamp = nodeAnim->MPositionKeys[i].MTime;
-
-                if (timestamp > max)
-                    max = timestamp;
-                
                 positions[i] = new KeyPosition
                 {
-                    TimeStamp = timestamp,
-                    Position = position
+                    TimeStamp = nodeAnim->MPositionKeys[i].MTime,
+                    Position = nodeAnim->MPositionKeys[i].MValue
                 };
             }
 
@@ -115,19 +107,12 @@ namespace OpenGLEngine
             var rotations = new KeyRotation[rotationsCount];
             for (var i = 0; i < rotationsCount; i++)
             {
-                var rotation = nodeAnim->MRotationKeys[i].MValue;
-                var timestamp = nodeAnim->MRotationKeys[i].MTime;
-
-                if (timestamp > max)
-                    max = timestamp;
-                
                 rotations[i] = new KeyRotation()
                 {
-                    TimeStamp = timestamp,
-                    Rotation = rotation
+                    TimeStamp = nodeAnim->MRotationKeys[i].MTime,
+                    Rotation = nodeAnim->MRotationKeys[i].MValue
                 };
             }
-
             return rotations;
         }
 
@@ -136,21 +121,13 @@ namespace OpenGLEngine
             var scales = new KeyScale[scaleCount];
             for (var i = 0; i < scaleCount; i++)
             {
-                var scale = nodeAnim->MScalingKeys[i].MValue;
-                var timestamp = nodeAnim->MScalingKeys[i].MTime;
-
-                if (timestamp > max)
-                    max = timestamp;
-                
                 scales[i] = new KeyScale
                 {
-                    TimeStamp = timestamp,
-                    Scale = scale
+                    TimeStamp = nodeAnim->MScalingKeys[i].MTime,
+                    Scale = nodeAnim->MScalingKeys[i].MValue
                 };
             }
-
             return scales;
         }
     }
-
 }

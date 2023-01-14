@@ -17,6 +17,7 @@ struct FinalBonesMatrice {
     mat4 matrix;
 };
 
+uniform bool enableAnimation;
 uniform FinalBonesMatrice finalBonesMatrices[MAX_BONES];
 
 out vec2 TexCoords;
@@ -27,24 +28,29 @@ out vec4 Weights;
 
 void main(void)
 {
-    vec4 totalPosition = vec4(aPosition, 1.0f);
-    for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+    vec4 pos = vec4(aPosition, 1.0f);
+    if (enableAnimation)
     {
-        if (aBoneIds[i] == -1)
-        continue;
-        if (aBoneIds[i] >= MAX_BONES)
+        mat4 boneTransform = mat4(1.0f);
+        vec3 totalNormal = vec3(0.0f);
+        for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
         {
-            totalPosition = vec4(aPosition, 1.0f);
-            break;
+            if (aBoneIds[i] == -1)
+            {
+                continue;
+            }
+            if (aBoneIds[i] >= MAX_BONES)
+            {
+                break;
+            }
+
+            boneTransform += finalBonesMatrices[aBoneIds[i]].matrix * aWeights[i];
         }
-        vec4 localPosition = finalBonesMatrices[aBoneIds[i]].matrix * vec4(aPosition, 1.0f);
-        totalPosition += localPosition * aWeights[i];
-        vec3 localNormal = mat3(finalBonesMatrices[aBoneIds[i]].matrix) * aNormal;
+        pos = boneTransform * vec4(aPosition, 1.0f);
     }
 
-    //    totalPosition = vec4(aPosition, 1.0f);
-    gl_Position = projection * view * model * totalPosition;
-    WorldPos = vec3(model * totalPosition);
+    gl_Position = projection * view * model * pos;
+    WorldPos = vec3(model * vec4(aPosition, 1.0f));
     Normal = mat3(transpose(inverse(model))) * aNormal;
     TexCoords = aTexCoords;
 

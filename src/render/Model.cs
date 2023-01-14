@@ -1,4 +1,6 @@
-﻿namespace OpenGLEngine
+﻿using System.Numerics;
+
+namespace OpenGLEngine
 {
     public class Model : IDisposable
     {
@@ -8,6 +10,8 @@
         public readonly Dictionary<string, BoneInfo> BoneInfoDict;
         public readonly int BoneCounter;
 
+        public readonly Matrix4x4 GlobalInverseTransformation;
+
         public Model(string path)
         {
             meshRenderers = new List<MeshRenderer>();
@@ -15,6 +19,7 @@
             meshes = importer.LoadModel(path);
             BoneInfoDict = importer.BoneInfoMap;
             BoneCounter = importer.BoneCount;
+            GlobalInverseTransformation = importer.GlobalInverseTransformation;
         }
 
         public void SetupMesh()
