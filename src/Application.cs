@@ -27,7 +27,7 @@ namespace OpenGLEngine
         private Shader platformShader = null!;
         private Model platform = null!;
 
-        private bool enableAnimation = true;
+        private bool enableAnimation = false;
         private bool debugShowBones = false;
 
         private bool firstMove;
