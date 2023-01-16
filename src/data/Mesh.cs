@@ -16,6 +16,7 @@ namespace OpenGLEngine
         public readonly bool HaveBones;
         public readonly bool UseNormalMap;
 
+        public readonly bool UseMetallicRoughnessMap;
 
         public Mesh(string name, Vector3[] vertices, Vector3[] normals, Vector2[] texCoords, BoneWeight[]? boneWeights, uint[] indices,
             Texture[] textures)
@@ -29,6 +30,7 @@ namespace OpenGLEngine
             Indices = indices;
             Textures = textures;
             UseNormalMap = Textures.Any(x => x.Type == "normalMap");
+            UseMetallicRoughnessMap = Textures.Any(x => x.Type == "metallicMap");
         }
 
         public unsafe int SizeOfVertices => sizeof(Vector3) * Vertices.Length;

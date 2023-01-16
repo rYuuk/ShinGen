@@ -24,9 +24,9 @@ namespace OpenGLEngine
 
             vertexBufferObject = RenderFactory.CreateBufferObject(BufferTargetARB.ArrayBuffer);
 
-            var totalSize = mesh.SizeOfVertices + 
-                            mesh.SizeOfNormals + 
-                            mesh.SizeOfTexCoords + 
+            var totalSize = mesh.SizeOfVertices +
+                            mesh.SizeOfNormals +
+                            mesh.SizeOfTexCoords +
                             mesh.SizeOfBoneWeights;
 
             vertexBufferObject.AddBufferData(totalSize);
@@ -64,6 +64,7 @@ namespace OpenGLEngine
         public void Draw(Shader shader)
         {
             shader.SetInt("useNormalMap", mesh.UseNormalMap ? 1 : 0);
+            shader.SetInt("useMetallicRoughnessMap", mesh.UseMetallicRoughnessMap ? 1 : 0);
 
             for (var i = 0; i < mesh.Textures.Length; i++)
             {

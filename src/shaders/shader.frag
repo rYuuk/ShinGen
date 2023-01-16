@@ -10,6 +10,7 @@ in vec4 Weights;
 // material parameters
 uniform sampler2D albedoMap;
 uniform bool useNormalMap;
+uniform bool useMetallicRoughnessMap;
 uniform sampler2D normalMap;
 uniform sampler2D metallicMap;
 uniform sampler2D aoMap;
@@ -89,8 +90,21 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 void main()
 {
     vec3 albedo = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
-    float metallic = texture(metallicMap, TexCoords).b;
-    float roughness = texture(metallicMap, TexCoords).g;
+
+    float metallic = 0.0;
+    if(useMetallicRoughnessMap)
+    {
+        metallic = texture(metallicMap, TexCoords).b;
+    }
+    // TODO Fix this
+    metallic = 0.0f;
+
+    float roughness = 0.8;
+    if (useMetallicRoughnessMap)
+    {
+        roughness = texture(metallicMap, TexCoords).g;
+    }
+
     float ao = 1;
 
     vec3 N;

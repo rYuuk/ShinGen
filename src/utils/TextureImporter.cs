@@ -44,7 +44,8 @@ namespace OpenGLEngine
                 var index = int.Parse(path.ToString()[1..]);
                 var assimpTexture = assimpTextures[index];
                 var textureName = meshName + "_" + typeName + "_" + assimpTexture->MFilename;
-
+                Console.WriteLine(textureName);
+                
                 for (var j = 0; j < texturesLoaded.Count; j++)
                 {
                     if (texturesLoaded[j].Name != textureName) continue;
@@ -54,11 +55,12 @@ namespace OpenGLEngine
                 }
                 if (skip) continue;
 
+                
                 var texture = new Texture();
                 texture.ID = TextureLoader.LoadFromBytes(assimpTexture->PcData, assimpTexture->MWidth, assimpTexture->MHeight);
                 texture.Name = textureName;
                 texture.Type = typeName;
-
+                
                 texturesLoaded.Add(texture);
                 textures.Add(texture);
             }
