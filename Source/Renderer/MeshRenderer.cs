@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using Silk.NET.OpenGL;
 
 namespace OpenGLEngine
 {
@@ -22,7 +21,7 @@ namespace OpenGLEngine
             vertexArray.Load();
             var layout = new VertexBufferLayout();
 
-            vertexBufferObject = RenderFactory.CreateBufferObject(BufferTargetARB.ArrayBuffer);
+            vertexBufferObject = RenderFactory.CreateBufferObject(BufferType.ArrayBuffer);
 
             var totalSize = mesh.SizeOfVertices +
                             mesh.SizeOfNormals +
@@ -47,14 +46,14 @@ namespace OpenGLEngine
             {
                 offset += mesh.SizeOfTexCoords;
                 vertexBufferObject.AddBufferSubData<int>(mesh.FlattenedBoneIndices, offset);
-                layout.Push(3, 4, offset, GLEnum.Int);
+                layout.Push(3, 4, offset, ElementType.Int);
 
                 offset += mesh.FlattenedBoneIndices.Length * sizeof(int);
                 vertexBufferObject.AddBufferSubData<float>(mesh.FlattenedBoneWeights, offset);
                 layout.Push(4, 4, offset);
             }
 
-            elementBufferObject = RenderFactory.CreateBufferObject(BufferTargetARB.ElementArrayBuffer);
+            elementBufferObject = RenderFactory.CreateBufferObject(BufferType.ElementBuffer);
             elementBufferObject.AddBufferData<uint>(mesh.Indices);
 
             vertexArray.AddBufferLayout(layout);

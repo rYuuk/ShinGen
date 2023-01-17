@@ -21,12 +21,12 @@ namespace OpenGLEngine
             {
                 gl.EnableVertexAttribArray((uint) element.Index);
 
-                if (element.Type == GLEnum.Int)
+                if (element.Type == VertexAttribPointerType.Int)
                 {
                     gl.VertexAttribIPointer(
                         (uint) element.Index,
                         element.Count,
-                        element.Type,
+                        VertexAttribIType.Int,
                         (uint) element.Stride,
                         (void*) element.Offset);
                 }

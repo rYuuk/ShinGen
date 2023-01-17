@@ -48,7 +48,7 @@ namespace OpenGLEngine
         private string url = "https://api.readyplayer.me/v1/avatars/63c5900d295455f2dd017fd2.glb";
         private bool avatarDownloaded;
 
-        private string log = "";
+        private string log = string.Empty;
 
         public ModelApplication()
         {

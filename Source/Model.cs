@@ -30,8 +30,8 @@ namespace OpenGLEngine
             GlobalInverseTransformation = importer.GlobalInverseTransformation;
 
             Shader = RenderFactory.CreateShader(
-                "src/shaders/shader.vert",
-                "src/shaders/shader.frag");
+                "Source/Shaders/shader.vert",
+                "Source/Shaders/shader.frag");
         }
 
         public void SetupMesh()

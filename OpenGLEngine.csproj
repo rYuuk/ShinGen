@@ -21,8 +21,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="src/Shaders/**" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="Source/Shaders/**" CopyToOutputDirectory="PreserveNewest" />
         <None Include="Resources/**" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Source\UI" />
     </ItemGroup>
 
 
