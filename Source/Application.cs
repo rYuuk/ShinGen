@@ -1,10 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
-using ImGuiNET;
+using OpenGLEngine.UI;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
-using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Windowing;
 
 namespace OpenGLEngine
@@ -23,13 +22,13 @@ namespace OpenGLEngine
 
         private AnimatedModel avatar = null!;
         private Model platform = null!;
+        private UIWidget uiWidget = null!;
+        
+        private readonly Stopwatch stopwatch;
 
         private bool firstMove;
         private float lastPos;
 
-        private ImGuiController imgui;
-
-        private readonly Stopwatch stopwatch;
         private float ElapsedSeconds => stopwatch.ElapsedMilliseconds / 1000f;
 
         private readonly Vector3[] lightPositions =
@@ -45,11 +44,8 @@ namespace OpenGLEngine
         private bool isFocused = true;
         private float degrees;
 
-        private string url = "https://api.readyplayer.me/v1/avatars/63c5900d295455f2dd017fd2.glb";
         private bool avatarDownloaded;
-
-        private string log = string.Empty;
-
+        
         public ModelApplication()
         {
             stopwatch = new Stopwatch();
@@ -92,7 +88,8 @@ namespace OpenGLEngine
         {
             gl = GL.GetApi(window);
             var windowInput = window.CreateInput();
-            imgui = new ImGuiController(gl, window, windowInput);
+            uiWidget = new UI.UIWidget(gl, window, windowInput);
+            uiWidget.DownloadButtonClicked += DownloadAvatarAsync;
 
             RenderHelper.SetRenderer(gl);
             RenderFactory.SetRenderer(gl);
@@ -161,51 +158,11 @@ namespace OpenGLEngine
             cubemapRenderer.Draw(viewWithoutTranslation, camera.GetProjectionMatrix());
             gl.DepthFunc(DepthFunction.Less);
 
-            imgui.Update((float) deltaTime);
-
-            ImGui.Begin("Avatar Loader");
-            ImGui.SetWindowSize(new Vector2(900, 500));
-            ImGui.PushItemWidth(760f);
-            ImGui.SetWindowFontScale(1.5f);
-            ImGui.Text("Enter a URL for a GLB to render");
-            ImGui.NewLine();
-            ImGui.InputText(string.Empty, ref url, 100);
-            ImGui.SameLine();
-            if (ImGui.Button("Download"))
-            {
-                DownloadAvatarAsync(url);
-            }
-            ImGui.NewLine();
-            ImGui.Separator();
-            if (ImGui.CollapsingHeader("Debug"))
-            {
-                // ImGui.Text("Debug");
-                // ImGui.Separator();
-                ImGui.Text($"MeshCount: {avatar.Meshes.Count}");
-                ImGui.SameLine(900 - 100);
-                ImGui.Text($"FPS: {1 / deltaTime:F0}");
-
-                for (var i = 0; i < avatar.Meshes.Count; i++)
-                {
-                    ImGui.Separator();
-                    var mesh = avatar.Meshes[i];
-                    ImGui.Text($"Mesh{i}\n" +
-                               $" Name: {mesh.Name}\n" +
-                               $" Vertices: {mesh.Vertices.Length}\n" +
-                               $" Indices: {mesh.Indices.Length}\n" +
-                               $" Normals: {mesh.Normals.Length}\n" +
-                               $" TexCoords: {mesh.TexCoords.Length}\n" +
-                               $" Textures: {mesh.Textures.Length}");
-                }
-                ImGui.Separator();
-            }
-            if (ImGui.CollapsingHeader("Logs"))
-            {
-                ImGui.Text(log);
-            }
-
-            ImGui.End();
-            imgui.Render();
+            uiWidget.Begin(deltaTime);
+            uiWidget.RenderDownloadUI();
+            uiWidget.RenderDebugUI(deltaTime, avatar);
+            uiWidget.RenderLogUI();
+            uiWidget.End();
 
             if (avatarDownloaded)
             {
@@ -213,7 +170,7 @@ namespace OpenGLEngine
                     "C:/Users/ryuuk/Desktop/Sekai/Work/Personal/Projects/OpenGLEngine/Resources/Avatar/SingleMesh/Avatar1.glb");
                 avatar.SetupMesh();
                 avatarDownloaded = false;
-                log += $"\nModel loading completed : {ElapsedSeconds}s";
+                uiWidget.AddLog($"Model loading completed : {ElapsedSeconds}s");
             }
 
             avatar.Rotation = new Vector3(0, MathHelper.DegreesToRadians(degrees), 0);
@@ -229,7 +186,7 @@ namespace OpenGLEngine
 
         private async void DownloadAvatarAsync(string path)
         {
-            log += "Downloading GLB...";
+            uiWidget.AddLog("Downloading GLB...");
 
             var client = new HttpClient();
             var response = await client.GetAsync(path);
@@ -239,7 +196,7 @@ namespace OpenGLEngine
                 downloadedAvatar = await response.Content.ReadAsByteArrayAsync();
             }
             client.Dispose();
-            log += $"\nDownload completed : {ElapsedSeconds}s";
+            uiWidget.AddLog($"Download completed : {ElapsedSeconds}s");
 
             if (downloadedAvatar != null)
             {
@@ -248,7 +205,7 @@ namespace OpenGLEngine
                     downloadedAvatar);
                 avatarDownloaded = true;
             }
-            log += $"\nSaved at path : {ElapsedSeconds}s";
+            uiWidget.AddLog($"Saved at path : {ElapsedSeconds}s");
 
             await Task.Yield();
         }

@@ -25,9 +25,5 @@
         <None Include="Resources/**" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Source\UI" />
-    </ItemGroup>
-
 
 </Project>
