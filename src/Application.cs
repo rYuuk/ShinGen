@@ -48,13 +48,15 @@ namespace OpenGLEngine
         private string url = "https://api.readyplayer.me/v1/avatars/63c5900d295455f2dd017fd2.glb";
         private bool avatarDownloaded;
 
+        private string log = "";
+
         public ModelApplication()
         {
             stopwatch = new Stopwatch();
             stopwatch.Start();
 
             var options = WindowOptions.Default;
-            options.Size = new Vector2D<int>(1280, 720);
+            options.Size = new Vector2D<int>(1920, 1080);
             options.Title = "OpenGLEngine";
             options.Samples = 4;
 
@@ -88,8 +90,6 @@ namespace OpenGLEngine
 
         private void OnLoad()
         {
-            Console.WriteLine($"Loading started: {ElapsedSeconds}s");
-
             gl = GL.GetApi(window);
             var windowInput = window.CreateInput();
             imgui = new ImGuiController(gl, window, windowInput);
@@ -118,18 +118,13 @@ namespace OpenGLEngine
             cubemapRenderer = new CubemapRenderer();
             cubemapRenderer.Load();
 
-            Console.WriteLine($"Cubemap loaded: {ElapsedSeconds}s");
-
-            // avatar = new AnimatedModel("Resources/Avatar/MultiMesh/Avatar.glb");
-            avatar = new AnimatedModel("Resources/Avatar/SingleMesh/Avatar.glb");
+            avatar = new AnimatedModel("Resources/Avatar/MultiMesh/Avatar.glb");
+            // avatar = new AnimatedModel("Resources/Avatar/SingleMesh/Avatar.glb");
             avatar.SetupMesh();
-
-            Console.WriteLine($"Avatar loaded: {ElapsedSeconds}s");
 
             platform = new Model("Resources/Platform.glb");
             platform.SetupMesh();
 
-            Console.WriteLine($"Platform loaded: {ElapsedSeconds}s");
             stopwatch.Stop();
         }
 
@@ -140,7 +135,7 @@ namespace OpenGLEngine
             cubemapRenderer.Dispose();
         }
 
-        private void OnRender(double time)
+        private void OnRender(double deltaTime)
         {
             RenderHelper.Clear();
 
@@ -166,36 +161,67 @@ namespace OpenGLEngine
             cubemapRenderer.Draw(viewWithoutTranslation, camera.GetProjectionMatrix());
             gl.DepthFunc(DepthFunction.Less);
 
-            imgui.Update(1 / 60f);
-            // cubeRenderer.Draw(camera.GetViewMatrix(), camera.GetProjectionMatrix());
-            var framerate = ImGui.GetIO().Framerate;
-            // ImGui.Text($"Application average {1000.0f / framerate:0.##} ms/frame ({framerate:0.#} FPS)");
+            imgui.Update((float) deltaTime);
 
-            ImGui.InputText("", ref url, 100);
+            ImGui.Begin("Avatar Loader");
+            ImGui.SetWindowSize(new Vector2(900, 500));
+            ImGui.PushItemWidth(760f);
+            ImGui.SetWindowFontScale(1.5f);
+            ImGui.Text("Enter a URL for a GLB to render");
+            ImGui.NewLine();
+            ImGui.InputText(string.Empty, ref url, 100);
             ImGui.SameLine();
             if (ImGui.Button("Download"))
             {
                 DownloadAvatarAsync(url);
             }
+            ImGui.NewLine();
+            ImGui.Separator();
+            if (ImGui.CollapsingHeader("Debug"))
+            {
+                // ImGui.Text("Debug");
+                // ImGui.Separator();
+                ImGui.Text($"MeshCount: {avatar.Meshes.Count}");
+                ImGui.SameLine(900 - 100);
+                ImGui.Text($"FPS: {1 / deltaTime:F0}");
 
+                for (var i = 0; i < avatar.Meshes.Count; i++)
+                {
+                    ImGui.Separator();
+                    var mesh = avatar.Meshes[i];
+                    ImGui.Text($"Mesh{i}\n" +
+                               $" Name: {mesh.Name}\n" +
+                               $" Vertices: {mesh.Vertices.Length}\n" +
+                               $" Indices: {mesh.Indices.Length}\n" +
+                               $" Normals: {mesh.Normals.Length}\n" +
+                               $" TexCoords: {mesh.TexCoords.Length}\n" +
+                               $" Textures: {mesh.Textures.Length}");
+                }
+                ImGui.Separator();
+            }
+            if (ImGui.CollapsingHeader("Logs"))
+            {
+                ImGui.Text(log);
+            }
+
+            ImGui.End();
             imgui.Render();
 
             if (avatarDownloaded)
             {
-                avatar = new AnimatedModel("D:/Sekai/Work/Personal/Projects/OpenGLEngine/Resources/Avatar/SingleMesh/Avatar1.glb");
+                avatar = new AnimatedModel(
+                    "C:/Users/ryuuk/Desktop/Sekai/Work/Personal/Projects/OpenGLEngine/Resources/Avatar/SingleMesh/Avatar1.glb");
                 avatar.SetupMesh();
                 avatarDownloaded = false;
+                log += $"\nModel loading completed : {ElapsedSeconds}s";
             }
 
-            if (avatar != null)
-            {
-                avatar.Rotation = new Vector3(0, MathHelper.DegreesToRadians(degrees), 0);
-                avatar.Light(lightPositions, lightColors);
-                avatar.Animate(time);
+            avatar.Rotation = new Vector3(0, MathHelper.DegreesToRadians(degrees), 0);
+            avatar.Light(lightPositions, lightColors);
+            avatar.Animate(deltaTime);
 
-                avatar.SetMatrices(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
-                avatar.Draw();
-            }
+            avatar.SetMatrices(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
+            avatar.Draw();
 
             // draw in wireframe
             // gl.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
@@ -203,6 +229,8 @@ namespace OpenGLEngine
 
         private async void DownloadAvatarAsync(string path)
         {
+            log += "Downloading GLB...";
+
             var client = new HttpClient();
             var response = await client.GetAsync(path);
             byte[]? downloadedAvatar = null;
@@ -211,19 +239,27 @@ namespace OpenGLEngine
                 downloadedAvatar = await response.Content.ReadAsByteArrayAsync();
             }
             client.Dispose();
+            log += $"\nDownload completed : {ElapsedSeconds}s";
 
             if (downloadedAvatar != null)
             {
-                await File.WriteAllBytesAsync("D:/Sekai/Work/Personal/Projects/OpenGLEngine/Resources/Avatar/SingleMesh/Avatar1.glb",
+                await File.WriteAllBytesAsync(
+                    "C:/Users/ryuuk/Desktop/Sekai/Work/Personal/Projects/OpenGLEngine/Resources/Avatar/SingleMesh/Avatar1.glb",
                     downloadedAvatar);
                 avatarDownloaded = true;
             }
+            log += $"\nSaved at path : {ElapsedSeconds}s";
 
             await Task.Yield();
         }
 
         private void OnMouseMove(IMouse mouse, Vector2 position)
         {
+            if (position.X < window.Size.X / 2f)
+            {
+                return;
+            }
+
             if (mouse.IsButtonPressed(MouseButton.Left))
             {
                 if (firstMove)

@@ -11,6 +11,7 @@ namespace OpenGLEngine
         public Vector3 Rotation = Vector3.Zero;
         public Vector3 Scale = Vector3.One;
 
+        public List<Mesh> Meshes => meshes;
         public readonly Dictionary<string, BoneInfo> BoneInfoDict;
         public readonly int BoneCounter;
 
