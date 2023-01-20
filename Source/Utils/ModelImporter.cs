@@ -29,7 +29,11 @@ namespace OpenGLEngine
         {
             unsafe
             {
-                var scene = assimp.ImportFile(path, (uint) (PostProcessSteps.Triangulate | PostProcessSteps.FlipUVs));
+                var scene = assimp.ImportFile(path, (uint) (PostProcessSteps.Triangulate  
+                                                            | PostProcessSteps.FlipUVs  
+                                                            // REMOVES ANIMATIONS
+                                                            | PostProcessSteps.PreTransformVertices
+                                                            ));
 
                 if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
                 {

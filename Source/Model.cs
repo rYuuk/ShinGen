@@ -61,7 +61,10 @@ namespace OpenGLEngine
             Shader.SetVector3("camPos", camPos);
 
             var modelMatrix = Matrix4x4.CreateScale(Scale);
-            modelMatrix *= Matrix4x4.CreateFromYawPitchRoll(Rotation.Y, Rotation.X, Rotation.Z);
+            modelMatrix *= Matrix4x4.CreateFromYawPitchRoll(
+                MathHelper.DegreesToRadians(Rotation.Y),
+                MathHelper.DegreesToRadians(Rotation.X),
+                MathHelper.DegreesToRadians(Rotation.Z));
             modelMatrix *= Matrix4x4.CreateTranslation(Position);
             Shader.SetMatrix4("model", modelMatrix);
         }

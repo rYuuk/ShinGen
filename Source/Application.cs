@@ -17,13 +17,12 @@ namespace OpenGLEngine
         private Input input = null!;
         private Camera camera = null!;
 
-        // private CubeRenderer cubeRenderer = null!;
         private CubemapRenderer cubemapRenderer = null!;
 
         private AnimatedModel avatar = null!;
-        private Model platform = null!;
-        private UIWidget uiWidget = null!;
-        
+        private Model room = null!;
+        private UIController uiController = null!;
+
         private readonly Stopwatch stopwatch;
 
         private bool firstMove;
@@ -33,27 +32,27 @@ namespace OpenGLEngine
 
         private readonly Vector3[] lightPositions =
         {
-            new Vector3(0.0f, 0.0f, 5.0f)
+            new Vector3(0.0f, 5.0f, 8.0f)
         };
 
         private readonly Vector3[] lightColors =
         {
-            new Vector3(150.0f, 150.0f, 150.0f),
+            new Vector3(255.0f, 255.0f, 255.0f),
         };
 
         private bool isFocused = true;
         private float degrees;
 
         private bool avatarDownloaded;
-        
+
         public ModelApplication()
         {
             stopwatch = new Stopwatch();
             stopwatch.Start();
 
             var options = WindowOptions.Default;
-            options.Size = new Vector2D<int>(1920, 1080);
-            options.Title = "OpenGLEngine";
+            options.Size = new Vector2D<int>(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
+            options.Title = Constants.TITLE;
             options.Samples = 4;
 
             window = Window.Create(options);
@@ -88,14 +87,16 @@ namespace OpenGLEngine
         {
             gl = GL.GetApi(window);
             var windowInput = window.CreateInput();
-            uiWidget = new UI.UIWidget(gl, window, windowInput);
-            uiWidget.DownloadButtonClicked += DownloadAvatarAsync;
+
 
             RenderHelper.SetRenderer(gl);
             RenderFactory.SetRenderer(gl);
             TextureLoader.SetRenderer(gl);
 
             RenderHelper.LoadSettings();
+
+            uiController = new UI.UIController(gl, window, windowInput);
+            uiController.DownloadButtonClicked += DownloadAvatarAsync;
 
             for (var i = 0; i < windowInput.Mice.Count; i++)
             {
@@ -106,11 +107,8 @@ namespace OpenGLEngine
 
             windowInput.Keyboards[0].KeyUp += OnKeyUp;
 
-            camera = new Camera(new Vector3(-1, 0.8f, 3), window.Size.X / (float) window.Size.Y, 1f, 0.1f);
+            camera = new Camera(new Vector3(0, 1.6f, 3), window.Size.X / (float) window.Size.Y, 2f, 0.1f);
             input = new Input(camera, windowInput.Keyboards[0], windowInput.Mice[0], window.Close);
-
-            // cubeRenderer = new CubeRenderer();
-            // cubeRenderer.Load();
 
             cubemapRenderer = new CubemapRenderer();
             cubemapRenderer.Load();
@@ -119,8 +117,9 @@ namespace OpenGLEngine
             // avatar = new AnimatedModel("Resources/Avatar/SingleMesh/Avatar.glb");
             avatar.SetupMesh();
 
-            platform = new Model("Resources/Platform.glb");
-            platform.SetupMesh();
+            room = new Model("Resources/OfficeRoom.glb");
+            room = new Model("Resources/EpicRoom.glb");
+            room.SetupMesh();
 
             stopwatch.Stop();
         }
@@ -128,7 +127,7 @@ namespace OpenGLEngine
         private void OnUnload()
         {
             avatar.Dispose();
-            platform.Dispose();
+            room.Dispose();
             cubemapRenderer.Dispose();
         }
 
@@ -136,11 +135,12 @@ namespace OpenGLEngine
         {
             RenderHelper.Clear();
 
-            platform.Scale = Vector3.One * 0.1f;
-            platform.Position = new Vector3(0.0f, -0.12f, 0.0f);
-            platform.Light(lightPositions, lightColors);
-            platform.SetMatrices(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
-            platform.Draw();
+            room.Scale = Vector3.One * 0.2f;
+            room.Position = new Vector3(0.0f, 0, 0f);
+            room.Rotation = new Vector3(0, -45, 0);
+            room.Light(lightPositions, lightColors);
+            room.SetMatrices(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
+            room.Draw();
 
             var view = camera.GetViewMatrix();
             var viewWithoutTranslation = view with
@@ -154,31 +154,33 @@ namespace OpenGLEngine
                 M44 = 0
             };
 
-            gl.DepthFunc(DepthFunction.Lequal);
-            cubemapRenderer.Draw(viewWithoutTranslation, camera.GetProjectionMatrix());
-            gl.DepthFunc(DepthFunction.Less);
-
-            uiWidget.Begin(deltaTime);
-            uiWidget.RenderDownloadUI();
-            uiWidget.RenderDebugUI(deltaTime, avatar);
-            uiWidget.RenderLogUI();
-            uiWidget.End();
+            // gl.DepthFunc(DepthFunction.Lequal);
+            // cubemapRenderer.Draw(viewWithoutTranslation, camera.GetProjectionMatrix());
+            // gl.DepthFunc(DepthFunction.Less);
 
             if (avatarDownloaded)
             {
                 avatar = new AnimatedModel(
-                    "C:/Users/ryuuk/Desktop/Sekai/Work/Personal/Projects/OpenGLEngine/Resources/Avatar/SingleMesh/Avatar1.glb");
+                    "Resources/Avatar/SingleMesh/DownloadedAvatar.glb");
                 avatar.SetupMesh();
                 avatarDownloaded = false;
-                uiWidget.AddLog($"Model loading completed : {ElapsedSeconds}s");
+                uiController.AddLog($"Model loading completed : {ElapsedSeconds}s");
             }
 
-            avatar.Rotation = new Vector3(0, MathHelper.DegreesToRadians(degrees), 0);
+            avatar.Position = new Vector3(0.6f, 0.1f, 0.2f);
+            avatar.Scale = Vector3.One * 0.5f;
+            avatar.Rotation = new Vector3(0, degrees, 0);
             avatar.Light(lightPositions, lightColors);
             avatar.Animate(deltaTime);
 
             avatar.SetMatrices(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
             avatar.Draw();
+
+            uiController.Begin(deltaTime);
+            uiController.RenderAvatarLoaderWindow();
+            uiController.RenderDebugWindow(deltaTime, avatar, room);
+            uiController.RenderLogWindow();
+            uiController.End();
 
             // draw in wireframe
             // gl.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
@@ -186,7 +188,7 @@ namespace OpenGLEngine
 
         private async void DownloadAvatarAsync(string path)
         {
-            uiWidget.AddLog("Downloading GLB...");
+            uiController.AddLog("Downloading GLB...");
 
             var client = new HttpClient();
             var response = await client.GetAsync(path);
@@ -196,16 +198,15 @@ namespace OpenGLEngine
                 downloadedAvatar = await response.Content.ReadAsByteArrayAsync();
             }
             client.Dispose();
-            uiWidget.AddLog($"Download completed : {ElapsedSeconds}s");
+            uiController.AddLog($"Download completed : {ElapsedSeconds}s");
 
             if (downloadedAvatar != null)
             {
-                await File.WriteAllBytesAsync(
-                    "C:/Users/ryuuk/Desktop/Sekai/Work/Personal/Projects/OpenGLEngine/Resources/Avatar/SingleMesh/Avatar1.glb",
+                await File.WriteAllBytesAsync("Resources/Avatar/SingleMesh/DownloadedAvatar.glb",
                     downloadedAvatar);
                 avatarDownloaded = true;
             }
-            uiWidget.AddLog($"Saved at path : {ElapsedSeconds}s");
+            uiController.AddLog($"Saved at path : {ElapsedSeconds}s");
 
             await Task.Yield();
         }
@@ -257,6 +258,11 @@ namespace OpenGLEngine
 
         private void OnMouseWheel(IMouse mouse, ScrollWheel scrollWheel)
         {
+            if (mouse.Position.X < window.Size.X / 2f)
+            {
+                return;
+            }
+
             camera.Fov = Math.Clamp(camera.Fov - scrollWheel.Y, 1.0f, 45f);
         }
 

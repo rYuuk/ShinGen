@@ -2,6 +2,8 @@
 {
     public class AnimatedModel : Model
     {
+        /// If <c cref="ModelImporter"/> has PostProcessSteps.PreTransformVertices
+        /// while importing model,the animations are removed.
         public const bool ENABLE_ANIMATION = false;
         public const bool DEBUG_BONES = false;
         
