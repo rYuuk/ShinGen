@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
-using OpenGLEngine.UI;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -104,7 +103,7 @@ namespace OpenGLEngine
 
             RenderHelper.LoadSettings();
 
-            uiController = new UI.UIController(gl, window, windowInput);
+            uiController = new UIController(gl, window, windowInput);
             uiController.DownloadButtonClicked += DownloadAvatarAsync;
 
             for (var i = 0; i < windowInput.Mice.Count; i++)
@@ -186,6 +185,7 @@ namespace OpenGLEngine
         {
             if (avatarDownloadStatus == AvatarDownloadStatus.InProgress)
             {
+                // TODO Cancellation doesn't works, find a way.
                 ctx.Cancel();
             }
             ctx = new CancellationTokenSource();
