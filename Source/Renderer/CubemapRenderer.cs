@@ -49,8 +49,19 @@ namespace OpenGLEngine
 
         public void Draw(Matrix4x4 view, Matrix4x4 projection)
         {
+            var viewWithoutTranslation = view with
+            {
+                M14 = 0,
+                M24 = 0,
+                M34 = 0,
+                M41 = 0,
+                M42 = 0,
+                M43 = 0,
+                M44 = 0
+            };
+            
             shader.Bind();
-            shader.SetMatrix4("view", view);
+            shader.SetMatrix4("view", viewWithoutTranslation);
             shader.SetMatrix4("projection", projection);
 
             TextureLoader.LoadSlot(textureID, 0);

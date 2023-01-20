@@ -112,7 +112,7 @@ namespace OpenGLEngine.UI
             {
                 Name = "Log",
                 Pos = new Vector2(20, window.Size.Y - 320),
-                Size = new Vector2(500, 300),
+                Size = new Vector2(800, 300),
             };
 
             CreateWindow(logWindowData, () =>
@@ -124,6 +124,11 @@ namespace OpenGLEngine.UI
         public void AddLog(string logString)
         {
             log += logString + "\n";
+        }
+
+        public void ProgressLog(string logString, float progress)
+        {
+            log = $"{logString}: {progress * 100:F2}%" + "\n";
         }
     }
 }

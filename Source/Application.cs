@@ -10,6 +10,7 @@ namespace OpenGLEngine
 {
     public class ModelApplication : IDisposable
     {
+        private const string DOWNLOADED_AVATAR_FILE_PATH = "Resources/Avatar/SingleMesh/DownloadedAvatar.glb";
         private readonly IWindow window;
 
         private GL gl = null!;
@@ -43,7 +44,15 @@ namespace OpenGLEngine
         private bool isFocused = true;
         private float degrees;
 
-        private bool avatarDownloaded;
+        private CancellationTokenSource ctx = null!;
+        private AvatarDownloadStatus avatarDownloadStatus;
+
+        private enum AvatarDownloadStatus
+        {
+            None,
+            InProgress,
+            Downloaded
+        }
 
         public ModelApplication()
         {
@@ -142,28 +151,15 @@ namespace OpenGLEngine
             room.SetMatrices(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
             room.Draw();
 
-            var view = camera.GetViewMatrix();
-            var viewWithoutTranslation = view with
-            {
-                M14 = 0,
-                M24 = 0,
-                M34 = 0,
-                M41 = 0,
-                M42 = 0,
-                M43 = 0,
-                M44 = 0
-            };
-
             // gl.DepthFunc(DepthFunction.Lequal);
-            // cubemapRenderer.Draw(viewWithoutTranslation, camera.GetProjectionMatrix());
+            // cubemapRenderer.Draw(camera.GetViewMatrix(), camera.GetProjectionMatrix());
             // gl.DepthFunc(DepthFunction.Less);
 
-            if (avatarDownloaded)
+            if (avatarDownloadStatus is AvatarDownloadStatus.Downloaded)
             {
-                avatar = new AnimatedModel(
-                    "Resources/Avatar/SingleMesh/DownloadedAvatar.glb");
+                avatarDownloadStatus = AvatarDownloadStatus.None;
+                avatar = new AnimatedModel(DOWNLOADED_AVATAR_FILE_PATH);
                 avatar.SetupMesh();
-                avatarDownloaded = false;
                 uiController.AddLog($"Model loading completed : {ElapsedSeconds}s");
             }
 
@@ -188,27 +184,18 @@ namespace OpenGLEngine
 
         private async void DownloadAvatarAsync(string path)
         {
-            uiController.AddLog("Downloading GLB...");
-
-            var client = new HttpClient();
-            var response = await client.GetAsync(path);
-            byte[]? downloadedAvatar = null;
-            if (response.IsSuccessStatusCode)
+            if (avatarDownloadStatus == AvatarDownloadStatus.InProgress)
             {
-                downloadedAvatar = await response.Content.ReadAsByteArrayAsync();
+                ctx.Cancel();
             }
-            client.Dispose();
-            uiController.AddLog($"Download completed : {ElapsedSeconds}s");
-
-            if (downloadedAvatar != null)
-            {
-                await File.WriteAllBytesAsync("Resources/Avatar/SingleMesh/DownloadedAvatar.glb",
-                    downloadedAvatar);
-                avatarDownloaded = true;
-            }
-            uiController.AddLog($"Saved at path : {ElapsedSeconds}s");
-
-            await Task.Yield();
+            ctx = new CancellationTokenSource();
+            avatarDownloadStatus = AvatarDownloadStatus.InProgress;
+            
+            var progress = new Progress<float>(progress => uiController.ProgressLog("Downloading...", progress));
+            await WebRequestDispatcher.DownloadRequest(path, DOWNLOADED_AVATAR_FILE_PATH, progress, ctx.Token);
+            
+            uiController.AddLog($"Saved at path : {DOWNLOADED_AVATAR_FILE_PATH}, {ElapsedSeconds}s");
+            avatarDownloadStatus = AvatarDownloadStatus.Downloaded;
         }
 
         private void OnMouseMove(IMouse mouse, Vector2 position)
