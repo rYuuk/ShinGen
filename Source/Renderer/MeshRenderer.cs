@@ -62,13 +62,14 @@ namespace OpenGLEngine
 
         public void Draw(Shader shader)
         {
-            shader.SetInt("useNormalMap", mesh.UseNormalMap ? 1 : 0);
-            shader.SetInt("useMetallicRoughnessMap", mesh.UseMetallicRoughnessMap ? 1 : 0);
+            shader.SetInt("material.useNormalMap", mesh.UseNormalMap ? 1 : 0);
+            shader.SetInt("material.useMetallicRoughnessMap", mesh.UseMetallicRoughnessMap ? 1 : 0);
+            shader.SetInt("material.useEmissiveMap", mesh.UseEmissiveMap ? 1 : 0);
 
             for (var i = 0; i < mesh.Textures.Length; i++)
             {
                 var name = mesh.Textures[i].Type;
-                shader.SetInt(name, i);
+                shader.SetInt($"material.{name}", i);
                 TextureLoader.LoadSlot(mesh.Textures[i].ID, i);
             }
 

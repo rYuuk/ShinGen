@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Numerics;
+﻿using System.Numerics;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -23,12 +22,8 @@ namespace OpenGLEngine
         private Model room = null!;
         private UIController uiController = null!;
 
-        private readonly Stopwatch stopwatch;
-
         private bool firstMove;
         private float lastPos;
-
-        private float ElapsedSeconds => stopwatch.ElapsedMilliseconds / 1000f;
 
         private readonly Vector3[] lightPositions =
         {
@@ -55,9 +50,6 @@ namespace OpenGLEngine
 
         public ModelApplication()
         {
-            stopwatch = new Stopwatch();
-            stopwatch.Start();
-
             var options = WindowOptions.Default;
             options.Size = new Vector2D<int>(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
             options.Title = Constants.TITLE;
@@ -96,7 +88,6 @@ namespace OpenGLEngine
             gl = GL.GetApi(window);
             var windowInput = window.CreateInput();
 
-
             RenderHelper.SetRenderer(gl);
             RenderFactory.SetRenderer(gl);
             TextureLoader.SetRenderer(gl);
@@ -118,18 +109,23 @@ namespace OpenGLEngine
             camera = new Camera(new Vector3(0, 1.6f, 3), window.Size.X / (float) window.Size.Y, 2f, 0.1f);
             input = new Input(camera, windowInput.Keyboards[0], windowInput.Mice[0], window.Close);
 
+            uiController.RestartStopwatch();
             cubemapRenderer = new CubemapRenderer();
             cubemapRenderer.Load();
+            uiController.AddTimedLog("Cube map loading completed");
 
+
+            uiController.RestartStopwatch();
             avatar = new AnimatedModel("Resources/Avatar/MultiMesh/Avatar.glb");
             // avatar = new AnimatedModel("Resources/Avatar/SingleMesh/Avatar.glb");
             avatar.SetupMesh();
+            uiController.AddTimedLog($"Avatar model loading completed");
 
-            room = new Model("Resources/OfficeRoom.glb");
+            uiController.RestartStopwatch();
+            // room = new Model("Resources/OfficeRoom.glb");
             room = new Model("Resources/EpicRoom.glb");
             room.SetupMesh();
-
-            stopwatch.Stop();
+            uiController.AddTimedLog($"Room model loading completed");
         }
 
         private void OnUnload()
@@ -150,16 +146,17 @@ namespace OpenGLEngine
             room.SetMatrices(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
             room.Draw();
 
-            // gl.DepthFunc(DepthFunction.Lequal);
-            // cubemapRenderer.Draw(camera.GetViewMatrix(), camera.GetProjectionMatrix());
-            // gl.DepthFunc(DepthFunction.Less);
+            gl.DepthFunc(DepthFunction.Lequal);
+            cubemapRenderer.Draw(camera.GetViewMatrix(5), camera.GetProjectionMatrix());
+            gl.DepthFunc(DepthFunction.Less);
 
             if (avatarDownloadStatus is AvatarDownloadStatus.Downloaded)
             {
+                uiController.RestartStopwatch();
                 avatarDownloadStatus = AvatarDownloadStatus.None;
                 avatar = new AnimatedModel(DOWNLOADED_AVATAR_FILE_PATH);
                 avatar.SetupMesh();
-                uiController.AddLog($"Model loading completed : {ElapsedSeconds}s");
+                uiController.AddTimedLog($"Avatar model loading completed");
             }
 
             avatar.Position = new Vector3(0.6f, 0.1f, 0.2f);
@@ -190,11 +187,12 @@ namespace OpenGLEngine
             }
             ctx = new CancellationTokenSource();
             avatarDownloadStatus = AvatarDownloadStatus.InProgress;
-            
-            var progress = new Progress<float>(progress => uiController.ProgressLog("Downloading...", progress));
+
+            uiController.RestartStopwatch();
+            uiController.StartProgressLog();
+            var progress = new Progress<float>(progress => uiController.AddProgressLog("Downloading...", progress));
             await WebRequestDispatcher.DownloadRequest(path, DOWNLOADED_AVATAR_FILE_PATH, progress, ctx.Token);
-            
-            uiController.AddLog($"Saved at path : {DOWNLOADED_AVATAR_FILE_PATH}, {ElapsedSeconds}s");
+            uiController.AddTimedLog($"Downloaded at - {DOWNLOADED_AVATAR_FILE_PATH}");
             avatarDownloadStatus = AvatarDownloadStatus.Downloaded;
         }
 

@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using ImGuiNET;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
@@ -16,19 +17,24 @@ namespace OpenGLEngine
             public Vector2 Size;
         }
 
-        public Action<string> DownloadButtonClicked = null!;
-
         private readonly ImGuiController imgui;
         private readonly IView window;
 
+        public Action<string> DownloadButtonClicked = null!;
+
         private string url = "https://api.readyplayer.me/v1/avatars/63c5900d295455f2dd017fd2.glb";
         private string log = string.Empty;
+
+        private readonly Stopwatch stopwatch = null!;
+        private float ElapsedSeconds => stopwatch.ElapsedMilliseconds / 1000f;
 
 
         public UIController(GL gl, IView window, IInputContext inputContext)
         {
             this.window = window;
             imgui = new ImGuiController(gl, window, inputContext);
+            stopwatch = new Stopwatch();
+            stopwatch.Start();
         }
 
         public void Begin(double deltaTime)
@@ -112,7 +118,7 @@ namespace OpenGLEngine
             {
                 Name = "Log",
                 Pos = new Vector2(20, window.Size.Y - 320),
-                Size = new Vector2(800, 300),
+                Size = new Vector2(900, 300),
             };
 
             CreateWindow(logWindowData, () =>
@@ -126,9 +132,27 @@ namespace OpenGLEngine
             log += logString + "\n";
         }
 
-        public void ProgressLog(string logString, float progress)
+        private string lastLog = null!;
+
+        public void StartProgressLog()
         {
-            log = $"{logString}: {progress * 100:F2}%" + "\n";
+            lastLog = log;
+        }
+
+        public void AddProgressLog(string logString, float progress)
+        {
+            log = lastLog + $"{logString} {progress * 100:F2}%%\n";
+        }
+
+
+        public void RestartStopwatch()
+        {
+            stopwatch.Restart();
+        }
+
+        public void AddTimedLog(string logString)
+        {
+            log += $"{logString} : [{ElapsedSeconds:F2}s]\n";
         }
     }
 }

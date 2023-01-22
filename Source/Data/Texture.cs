@@ -1,10 +1,17 @@
-﻿
-namespace OpenGLEngine
+﻿namespace OpenGLEngine
 {
+    public enum ShaderTextures
+    {
+        albedoMap,
+        normalMap,
+        metallicRoughnessMap,
+        emissiveMap,
+    }
+
     public struct Texture
     {
         public uint ID;
-        public string Type;
+        public ShaderTextures Type;
         public string Name;
     }
 }

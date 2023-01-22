@@ -6,14 +6,20 @@ in vec3 Normal;
 flat in ivec4 BoneIds;
 in vec4 Weights;
 
+struct Material {
+    sampler2D albedoMap;
 
-// material parameters
-uniform sampler2D albedoMap;
-uniform bool useNormalMap;
-uniform bool useMetallicRoughnessMap;
-uniform sampler2D normalMap;
-uniform sampler2D metallicMap;
-uniform sampler2D aoMap;
+    bool useNormalMap;
+    sampler2D normalMap;
+
+    bool useMetallicRoughnessMap;
+    sampler2D metallicRoughnessMap;
+
+    bool useEmissiveMap;
+    sampler2D emissiveMap;
+};
+
+uniform Material material;
 
 // lights
 uniform vec3 lightPositions[4];
@@ -27,12 +33,9 @@ uniform int displayBoneIndex;
 const float PI = 3.14159265359;
 // ----------------------------------------------------------------------------
 // Easy trick to get tangent-normals to world-space to keep PBR code simplified.
-// Don't worry if you don't get what's going on; you generally want to do normal 
-// mapping the usual way for performance anways; I do plan make a note of this 
-// technique somewhere later in the normal mapping tutorial.
 vec3 getNormalFromMap()
 {
-    vec3 tangentNormal = texture(normalMap, TexCoords).xyz * 2.0 - 1.0;
+    vec3 tangentNormal = texture(material.normalMap, TexCoords).xyz * 2.0 - 1.0;
 
     vec3 Q1 = dFdx(WorldPos);
     vec3 Q2 = dFdy(WorldPos);
@@ -89,26 +92,26 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 // ----------------------------------------------------------------------------
 void main()
 {
-    vec3 albedo = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
+    vec3 albedo = pow(texture(material.albedoMap, TexCoords).rgb, vec3(2.2));
 
     float metallic = 0.0;
-    if(useMetallicRoughnessMap)
+    if (material.useMetallicRoughnessMap)
     {
-        metallic = texture(metallicMap, TexCoords).b;
+        metallic = texture(material.metallicRoughnessMap, TexCoords).b;
     }
     // TODO Fix this
     metallic = 0.0f;
 
     float roughness = 0.8;
-    if (useMetallicRoughnessMap)
+    if (material.useMetallicRoughnessMap)
     {
-        roughness = texture(metallicMap, TexCoords).g;
+        roughness = texture(material.metallicRoughnessMap, TexCoords).g;
     }
 
     float ao = 1;
 
     vec3 N;
-    if (useNormalMap)
+    if (material.useNormalMap)
     {
         N = getNormalFromMap();
     }
@@ -161,8 +164,6 @@ void main()
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
     }
 
-    // ambient lighting (note that the next IBL tutorial will replace 
-    // this ambient lighting with environment lighting).
     vec3 ambient = vec3(0.03) * albedo * ao;
 
     vec3 color = ambient + Lo;
@@ -192,6 +193,12 @@ void main()
 
     if (!found)
     {
+        if (material.useEmissiveMap)
+        {
+            vec3 emission = texture(material.emissiveMap, TexCoords).rgb;
+            color += emission;
+        }
+
         FragColor = vec4(color, 1.0);
     }
 }

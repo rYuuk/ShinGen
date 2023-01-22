@@ -83,9 +83,9 @@ namespace OpenGLEngine
         }
 
         // Get the view matrix using the LookAt function
-        public Matrix4x4 GetViewMatrix()
+        public Matrix4x4 GetViewMatrix(float value = 0.6f)
         {
-            return Matrix4x4.CreateLookAt(Position, Vector3.UnitY* 0.6f, up);
+            return Matrix4x4.CreateLookAt(Position, Vector3.UnitY* value, up);
         }
 
         // Get the projection matrix using the CreatePerspectiveFieldOfView function.
