@@ -5,7 +5,6 @@ namespace ShinGen
     public class Model : IDisposable
     {
         private readonly List<Mesh> meshes;
-        private readonly List<MeshRenderer> meshRenderers;
 
         public Vector3 Position = Vector3.Zero;
         public Vector3 Rotation = Vector3.Zero;
@@ -18,9 +17,12 @@ namespace ShinGen
         public readonly Matrix4x4 GlobalInverseTransformation;
         protected readonly Shader Shader;
 
+        private readonly Dictionary<Mesh, MeshRenderer> meshRendererMap;
+        private Matrix4x4 modelMatrix;
+
         public Model(string path)
         {
-            meshRenderers = new List<MeshRenderer>();
+            meshRendererMap = new Dictionary<Mesh, MeshRenderer>();
 
             var importer = new ModelImporter();
             meshes = importer.LoadModel(path);
@@ -36,10 +38,11 @@ namespace ShinGen
 
         public void SetupMesh()
         {
-            foreach (var meshRender in meshes.Select(mesh => new MeshRenderer(mesh)))
+            foreach (var mesh in meshes)
             {
-                meshRender.SetupMesh();
-                meshRenderers.Add(meshRender);
+                var meshRenderer = new MeshRenderer(mesh);
+                meshRenderer.SetupMesh();
+                meshRendererMap.Add(mesh, meshRenderer);
             }
         }
 
@@ -53,33 +56,20 @@ namespace ShinGen
             }
         }
 
-        public void SetMatrices(Matrix4x4 view, Matrix4x4 projection, Vector3 camPos)
+        public void Draw(Matrix4x4 view, Matrix4x4 projection, Vector3 camPos)
         {
-            Shader.Bind();
-            Shader.SetMatrix4("view", view);
-            Shader.SetMatrix4("projection", projection);
-            Shader.SetVector3("camPos", camPos);
+            SetMatrices(view, projection, camPos);
 
-            var modelMatrix = Matrix4x4.CreateScale(Scale);
-            modelMatrix *= Matrix4x4.CreateFromYawPitchRoll(
-                MathHelper.DegreesToRadians(Rotation.Y),
-                MathHelper.DegreesToRadians(Rotation.X),
-                MathHelper.DegreesToRadians(Rotation.Z));
-            modelMatrix *= Matrix4x4.CreateTranslation(Position);
-            Shader.SetMatrix4("model", modelMatrix);
-        }
-
-        public void Draw()
-        {
-            foreach (var meshRenderer in meshRenderers)
+            foreach (var mesh in meshRendererMap)
             {
-                meshRenderer.Draw(Shader);
+                Shader.SetMatrix4("modelTransformation", mesh.Key.Transformation, true);
+                mesh.Value.Draw(Shader);
             }
         }
 
         public void Dispose()
         {
-            foreach (var meshRenderer in meshRenderers)
+            foreach (var meshRenderer in meshRendererMap.Values)
             {
                 meshRenderer.Dispose();
             }
@@ -87,6 +77,22 @@ namespace ShinGen
             Shader.Dispose();
 
             GC.SuppressFinalize(this);
+        }
+
+        private void SetMatrices(Matrix4x4 view, Matrix4x4 projection, Vector3 camPos)
+        {
+            Shader.Bind();
+            Shader.SetMatrix4("view", view);
+            Shader.SetMatrix4("projection", projection);
+            Shader.SetVector3("camPos", camPos);
+
+            modelMatrix = Matrix4x4.CreateScale(Scale);
+            modelMatrix *= Matrix4x4.CreateFromYawPitchRoll(
+                MathHelper.DegreesToRadians(Rotation.Y),
+                MathHelper.DegreesToRadians(Rotation.X),
+                MathHelper.DegreesToRadians(Rotation.Z));
+            modelMatrix *= Matrix4x4.CreateTranslation(Position);
+            Shader.SetMatrix4("model", modelMatrix);
         }
     }
 }

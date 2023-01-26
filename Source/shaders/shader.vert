@@ -9,6 +9,7 @@ layout (location = 4) in vec4 aWeights;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 modelTransformation;
 
 const int MAX_BONES = 200;
 const int MAX_BONE_INFLUENCE = 4;
@@ -49,7 +50,7 @@ void main(void)
         pos = boneTransform * vec4(aPosition, 1.0f);
     }
 
-    gl_Position = projection * view * model * pos;
+    gl_Position = projection * view * model * modelTransformation * pos;
     WorldPos = vec3(model * vec4(aPosition, 1.0f));
     Normal = mat3(transpose(inverse(model))) * aNormal;
     TexCoords = aTexCoords;

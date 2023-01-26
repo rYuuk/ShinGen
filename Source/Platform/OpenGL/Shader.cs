@@ -70,12 +70,12 @@ namespace ShinGen
         public void SetVector3(string name, Vector3 value) =>
             gl.Uniform3(uniformLocations[name], value);
 
-        public unsafe void SetMatrix4(string name, Matrix4x4 matrix)
+        public unsafe void SetMatrix4(string name, Matrix4x4 matrix, bool transpose = false)
         {
             // Transpose determines whether or not the matrices should be transposed.
             // Since OpenTK uses row-major, whereas GLSL typically uses column-major,
             // we will almost always want to use true here.
-            gl.UniformMatrix4(uniformLocations[name], 1, false, (float*) &matrix);
+            gl.UniformMatrix4(uniformLocations[name], 1, transpose, (float*) &matrix);
         }
 
         private uint LoadShader(ShaderType type, string path)

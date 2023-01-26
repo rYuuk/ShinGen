@@ -31,9 +31,7 @@ namespace ShinGen
             {
                 var scene = assimp.ImportFile(path, (uint) (
                     PostProcessSteps.Triangulate |
-                    PostProcessSteps.FlipUVs |
-                    // REMOVES ANIMATIONS
-                    PostProcessSteps.PreTransformVertices
+                    PostProcessSteps.FlipUVs
                 ));
 
                 if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
@@ -42,28 +40,30 @@ namespace ShinGen
                     throw new Exception(error);
                 }
 
-                Matrix4x4.Invert(scene->MRootNode->MTransformation, out GlobalInverseTransformation);
-                ProcessNode(scene->MRootNode, scene);
+                // Matrix4x4.Invert(scene->MRootNode->MTransformation, out GlobalInverseTransformation);
+                ProcessNode(scene->MRootNode, scene, Matrix4x4.Identity);
             }
 
             return Meshes;
         }
 
-        private unsafe void ProcessNode(Node* node, Scene* scene)
+        private unsafe void ProcessNode(Node* node, Scene* scene, Matrix4x4 parentTransformation)
         {
+            var globalTransformation = node->MTransformation * parentTransformation;
+
             for (var i = 0; i < node->MNumMeshes; i++)
             {
                 var mesh = scene->MMeshes[node->MMeshes[i]];
-                Meshes.Add(ProcessMesh(mesh, scene));
+                Meshes.Add(ProcessMesh(mesh, scene, globalTransformation));
             }
 
             for (var i = 0; i < node->MNumChildren; i++)
             {
-                ProcessNode(node->MChildren[i], scene);
+                ProcessNode(node->MChildren[i], scene, globalTransformation);
             }
         }
 
-        private unsafe Mesh ProcessMesh(AssimpMesh* mesh, Scene* scene)
+        private unsafe Mesh ProcessMesh(AssimpMesh* mesh, Scene* scene, Matrix4x4 transformation)
         {
             var vertices = ProcessVertices(mesh);
             var indices = ProcessIndices(mesh);
@@ -82,7 +82,8 @@ namespace ShinGen
                 vertices.Item3,
                 boneWeights,
                 indices.ToArray(),
-                textures.ToArray());
+                textures.ToArray(),
+                transformation);
 
             return result;
         }
