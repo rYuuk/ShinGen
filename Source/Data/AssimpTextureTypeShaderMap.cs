@@ -1,6 +1,6 @@
 ﻿using Silk.NET.Assimp;
 
-namespace OpenGLEngine
+namespace ShinGen
 {
     public static class AssimpTextureTypeShaderMap
     {

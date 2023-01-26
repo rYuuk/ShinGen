@@ -4,7 +4,7 @@ using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 
-namespace OpenGLEngine
+namespace ShinGen
 {
     public class ModelApplication : IDisposable
     {

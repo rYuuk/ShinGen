@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 
-namespace OpenGLEngine
+namespace ShinGen
 {
     public class BoneWeightProcessor
     {

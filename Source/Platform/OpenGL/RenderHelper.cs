@@ -1,6 +1,6 @@
 ﻿using Silk.NET.OpenGL;
 
-namespace OpenGLEngine
+namespace ShinGen
 {
     public static class RenderHelper
     {

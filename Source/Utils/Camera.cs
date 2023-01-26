@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace OpenGLEngine
+namespace ShinGen
 {
     // TODO could have also managed the player input inside the camera class,
     // TODO a lot of the properties could have been made into functions.

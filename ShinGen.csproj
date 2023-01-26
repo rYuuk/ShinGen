@@ -6,6 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <AssemblyName>ShinGen</AssemblyName>
+        <RootNamespace>ShinGen</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -24,6 +26,4 @@
         <None Include="Source/Shaders/**" CopyToOutputDirectory="PreserveNewest" />
         <None Include="Resources/**" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
-
-
 </Project>

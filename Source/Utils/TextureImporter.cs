@@ -1,7 +1,7 @@
 ﻿using Silk.NET.Assimp;
 using AssimpTexture = Silk.NET.Assimp.Texture;
 
-namespace OpenGLEngine
+namespace ShinGen
 {
     public class TextureImporter
     {

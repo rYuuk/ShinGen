@@ -1,4 +1,4 @@
-﻿namespace OpenGLEngine
+﻿namespace ShinGen
 {
     public struct BoneWeight
     {

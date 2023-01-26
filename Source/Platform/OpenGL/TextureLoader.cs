@@ -3,7 +3,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using TextureWrapMode = Silk.NET.OpenGL.TextureWrapMode;
 
-namespace OpenGLEngine
+namespace ShinGen
 {
     // A helper class, meant to simplify loading textures.
     public static class TextureLoader

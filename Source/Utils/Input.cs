@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using Silk.NET.Input;
 
-namespace OpenGLEngine
+namespace ShinGen
 {
     public class Input
     {

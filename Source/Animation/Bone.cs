@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
 
-namespace OpenGLEngine
+namespace ShinGen
 {
     public class Bone
     {

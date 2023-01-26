@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using Silk.NET.Assimp;
 
-namespace OpenGLEngine
+namespace ShinGen
 {
     public class AnimationLoader
     {

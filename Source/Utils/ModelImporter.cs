@@ -2,7 +2,7 @@
 using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 
-namespace OpenGLEngine
+namespace ShinGen
 {
     public class ModelImporter
     {

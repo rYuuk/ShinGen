@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenGLEngine", "OpenGLEngine.csproj", "{7FE50DA0-F35C-4A4B-96DC-088085F366AC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShinGen", "ShinGen.csproj", "{7FE50DA0-F35C-4A4B-96DC-088085F366AC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

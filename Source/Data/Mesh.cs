@@ -1,10 +1,11 @@
 ﻿using System.Numerics;
 
-namespace OpenGLEngine
+namespace ShinGen
 {
     public readonly struct Mesh
     {
         public readonly string Name;
+        public readonly Matrix4x4 Transformation;
         public readonly Vector3[] Vertices;
         public readonly Vector3[] Normals;
         public readonly Vector2[] TexCoords;
@@ -19,7 +20,7 @@ namespace OpenGLEngine
         public readonly bool UseEmissiveMap;
 
         public Mesh(string name, Vector3[] vertices, Vector3[] normals, Vector2[] texCoords, BoneWeight[]? boneWeights, uint[] indices,
-            Texture[] textures)
+            Texture[] textures, Matrix4x4 transformation)
         {
             Name = name;
             Vertices = vertices;
@@ -29,6 +30,7 @@ namespace OpenGLEngine
             BoneWeights = boneWeights ?? Array.Empty<BoneWeight>();
             Indices = indices;
             Textures = textures;
+            Transformation = transformation;
             UseNormalMap = Textures.Any(x => x.Type == ShaderTextures.normalMap);
             UseMetallicRoughnessMap = Textures.Any(x => x.Type == ShaderTextures.metallicRoughnessMap);
             UseEmissiveMap = Textures.Any(x => x.Type == ShaderTextures.emissiveMap);

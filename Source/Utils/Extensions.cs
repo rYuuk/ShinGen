@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace OpenGLEngine
+namespace ShinGen
 {
     public static class HttpClientExtensions
     {

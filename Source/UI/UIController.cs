@@ -6,7 +6,7 @@ using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Windowing;
 
-namespace OpenGLEngine
+namespace ShinGen
 {
     public class UIController
     {
