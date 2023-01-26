@@ -19,16 +19,17 @@ namespace OpenGLEngine
 
         private readonly ImGuiController imgui;
         private readonly IView window;
+        private readonly Stopwatch stopwatch;
 
         public Action<string> DownloadButtonClicked = null!;
 
         private string url = "https://api.readyplayer.me/v1/avatars/63c5900d295455f2dd017fd2.glb";
+        private string downloadButton = "Download";
         private string log = string.Empty;
 
-        private readonly Stopwatch stopwatch = null!;
         private float ElapsedSeconds => stopwatch.ElapsedMilliseconds / 1000f;
 
-
+        
         public UIController(GL gl, IView window, IInputContext inputContext)
         {
             this.window = window;
@@ -53,7 +54,7 @@ namespace OpenGLEngine
             ImGui.SetWindowPos(windowData.Pos);
             ImGui.SetWindowSize(windowData.Size);
             ImGui.SetWindowFontScale(1.6f);
-            onWindow?.Invoke();
+            onWindow.Invoke();
             ImGui.End();
         }
 
@@ -71,14 +72,15 @@ namespace OpenGLEngine
                 ImGui.PushItemWidth(760f);
                 ImGui.InputText(string.Empty, ref url, 100);
                 ImGui.SameLine();
-                if (ImGui.Button("Load"))
+                if (ImGui.Button(downloadButton))
                 {
-                    DownloadButtonClicked?.Invoke(url);
+                    downloadButton = downloadButton == "Download" ? "Cancel" : "Download";
+                    DownloadButtonClicked(url);
                 }
             });
             ImGui.End();
         }
-
+        
         public void RenderDebugWindow(double deltaTime, params Model[] models)
         {
             var debugWindowData = new WindowData
@@ -90,24 +92,27 @@ namespace OpenGLEngine
 
             CreateWindow(debugWindowData, () =>
             {
-                foreach (var model in models)
-                {
-                    ImGui.Text($"MeshCount: {model.Meshes.Count}");
-                    ImGui.SameLine(debugWindowData.Size.X - 120);
-                    ImGui.Text($"FPS: {1 / deltaTime:F0}");
+                ImGui.Text("Loaded model data.");
+                ImGui.SameLine(debugWindowData.Size.X - 120);
+                ImGui.Text($"FPS: {1 / deltaTime:F0}");
+                ImGui.Separator();
 
-                    for (var i = 0; i < model.Meshes.Count; i++)
+                for (var j = 0; j < models.Length; j++)
+                {
+                    var model = models[j];
+                    ImGui.Text($"Model: {j}\nMeshCount: {model.Meshes.Count}");
+
+                    foreach (var mesh in model.Meshes)
                     {
                         ImGui.Separator();
-                        var mesh = model.Meshes[i];
-                        ImGui.Text($"Mesh{i}\n" +
-                                   $" Name: {mesh.Name}\n" +
-                                   $" Vertices: {mesh.Vertices.Length}\n" +
-                                   $" Indices: {mesh.Indices.Length}\n" +
-                                   $" Normals: {mesh.Normals.Length}\n" +
-                                   $" TexCoords: {mesh.TexCoords.Length}\n" +
-                                   $" Textures: {mesh.Textures.Length}");
+                        ImGui.Text($"Name: {mesh.Name}\n " +
+                                   $"Vertices: {mesh.Vertices.Length}\n " +
+                                   $"Indices: {mesh.Indices.Length}\n " +
+                                   $"Normals: {mesh.Normals.Length}\n " +
+                                   $"TexCoords: {mesh.TexCoords.Length}\n " +
+                                   $"Textures: {mesh.Textures.Length}");
                     }
+                    ImGui.Separator();
                 }
             });
         }

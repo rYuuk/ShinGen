@@ -27,7 +27,7 @@ namespace OpenGLEngine
 
         private readonly Vector3[] lightPositions =
         {
-            new Vector3(0.0f, 5.0f, 8.0f)
+            new Vector3(0.0f, 4.0f, 6.0f)
         };
 
         private readonly Vector3[] lightColors =
@@ -36,7 +36,7 @@ namespace OpenGLEngine
         };
 
         private bool isFocused = true;
-        private float degrees;
+        private float mouseRotationY;
 
         private CancellationTokenSource ctx = null!;
         private AvatarDownloadStatus avatarDownloadStatus;
@@ -113,8 +113,7 @@ namespace OpenGLEngine
             cubemapRenderer = new CubemapRenderer();
             cubemapRenderer.Load();
             uiController.AddTimedLog("Cube map loading completed");
-
-
+            
             uiController.RestartStopwatch();
             avatar = new AnimatedModel("Resources/Avatar/MultiMesh/Avatar.glb");
             // avatar = new AnimatedModel("Resources/Avatar/SingleMesh/Avatar.glb");
@@ -143,8 +142,7 @@ namespace OpenGLEngine
             room.Position = new Vector3(0.0f, 0, 0f);
             room.Rotation = new Vector3(0, -45, 0);
             room.Light(lightPositions, lightColors);
-            room.SetMatrices(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
-            room.Draw();
+            room.Draw(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
 
             gl.DepthFunc(DepthFunction.Lequal);
             cubemapRenderer.Draw(camera.GetViewMatrix(5), camera.GetProjectionMatrix());
@@ -161,12 +159,11 @@ namespace OpenGLEngine
 
             avatar.Position = new Vector3(0.6f, 0.1f, 0.2f);
             avatar.Scale = Vector3.One * 0.5f;
-            avatar.Rotation = new Vector3(0, degrees, 0);
+            avatar.Rotation = new Vector3(0, mouseRotationY, 0);
             avatar.Light(lightPositions, lightColors);
             avatar.Animate(deltaTime);
 
-            avatar.SetMatrices(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
-            avatar.Draw();
+            avatar.Draw(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
 
             uiController.Begin(deltaTime);
             uiController.RenderAvatarLoaderWindow();
@@ -182,8 +179,10 @@ namespace OpenGLEngine
         {
             if (avatarDownloadStatus == AvatarDownloadStatus.InProgress)
             {
-                // TODO Cancellation doesn't works, find a way.
+                uiController.AddTimedLog($"Download cancelled.");
+                avatarDownloadStatus = AvatarDownloadStatus.None;
                 ctx.Cancel();
+                return;
             }
             ctx = new CancellationTokenSource();
             avatarDownloadStatus = AvatarDownloadStatus.InProgress;
@@ -192,6 +191,10 @@ namespace OpenGLEngine
             uiController.StartProgressLog();
             var progress = new Progress<float>(progress => uiController.AddProgressLog("Downloading...", progress));
             await WebRequestDispatcher.DownloadRequest(path, DOWNLOADED_AVATAR_FILE_PATH, progress, ctx.Token);
+            if (ctx.IsCancellationRequested)
+            {
+                return;
+            }
             uiController.AddTimedLog($"Downloaded at - {DOWNLOADED_AVATAR_FILE_PATH}");
             avatarDownloadStatus = AvatarDownloadStatus.Downloaded;
         }
@@ -214,7 +217,7 @@ namespace OpenGLEngine
                 {
                     var deltaX = position.X - lastPos;
                     lastPos = position.X;
-                    degrees += deltaX * 10;
+                    mouseRotationY += deltaX * 10;
                 }
             }
         }
