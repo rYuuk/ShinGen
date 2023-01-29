@@ -4,26 +4,28 @@ namespace ShinGen
 {
     public class Model : IDisposable
     {
-        private readonly List<Mesh> meshes;
-
-        public Vector3 Position = Vector3.Zero;
-        public Vector3 Rotation = Vector3.Zero;
-        public Vector3 Scale = Vector3.One;
+        private readonly string path;
+        private List<Mesh> meshes;
 
         public List<Mesh> Meshes => meshes;
-        public readonly Dictionary<string, BoneInfo> BoneInfoDict;
-        public readonly int BoneCounter;
+        public Dictionary<string, BoneInfo> BoneInfoDict;
+        public int BoneCounter;
 
-        public readonly Matrix4x4 GlobalInverseTransformation;
-        protected readonly Shader Shader;
+        public Matrix4x4 GlobalInverseTransformation;
+        protected Shader Shader;
 
         private readonly Dictionary<Mesh, MeshRenderer> meshRendererMap;
-        private Matrix4x4 modelMatrix;
 
+        public bool IsLoaded;
+        
         public Model(string path)
         {
+            this.path = path;
             meshRendererMap = new Dictionary<Mesh, MeshRenderer>();
+        }
 
+        public void Load()
+        {
             var importer = new ModelImporter();
             meshes = importer.LoadModel(path);
             BoneInfoDict = importer.BoneInfoMap;
@@ -34,9 +36,10 @@ namespace ShinGen
             Shader = RenderFactory.CreateShader(
                 "Source/Shaders/shader.vert",
                 "Source/Shaders/shader.frag");
+            SetupMesh();
         }
 
-        public void SetupMesh()
+        private void SetupMesh()
         {
             foreach (var mesh in meshes)
             {
@@ -44,6 +47,8 @@ namespace ShinGen
                 meshRenderer.SetupMesh();
                 meshRendererMap.Add(mesh, meshRenderer);
             }
+
+            IsLoaded = true;
         }
 
         public void Light(Vector3[] lightPositions, Vector3[] lightColors)
@@ -56,9 +61,13 @@ namespace ShinGen
             }
         }
 
-        public void Draw(Matrix4x4 view, Matrix4x4 projection, Vector3 camPos)
+        public void Draw(Matrix4x4 model, Matrix4x4 view, Matrix4x4 projection, Vector3 camPos)
         {
-            SetMatrices(view, projection, camPos);
+            Shader.Bind();
+            Shader.SetMatrix4("model", model);
+            Shader.SetMatrix4("view", view);
+            Shader.SetMatrix4("projection", projection);
+            Shader.SetVector3("camPos", camPos);
 
             foreach (var mesh in meshRendererMap)
             {
@@ -77,22 +86,6 @@ namespace ShinGen
             Shader.Dispose();
 
             GC.SuppressFinalize(this);
-        }
-
-        private void SetMatrices(Matrix4x4 view, Matrix4x4 projection, Vector3 camPos)
-        {
-            Shader.Bind();
-            Shader.SetMatrix4("view", view);
-            Shader.SetMatrix4("projection", projection);
-            Shader.SetVector3("camPos", camPos);
-
-            modelMatrix = Matrix4x4.CreateScale(Scale);
-            modelMatrix *= Matrix4x4.CreateFromYawPitchRoll(
-                MathHelper.DegreesToRadians(Rotation.Y),
-                MathHelper.DegreesToRadians(Rotation.X),
-                MathHelper.DegreesToRadians(Rotation.Z));
-            modelMatrix *= Matrix4x4.CreateTranslation(Position);
-            Shader.SetMatrix4("model", modelMatrix);
         }
     }
 }
