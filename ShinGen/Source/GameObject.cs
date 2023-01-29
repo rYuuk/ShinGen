@@ -9,13 +9,14 @@
         {
             Components = new List<IComponent>();
             Transform = new Transform();
-            Transform.GameObject = this;
         }
 
-        public void AddComponent(IComponent component)
+        public T AddComponent<T>() where T : IComponent, new()
         {
+            var component = new T();
             Components.Add(component);
-            component.GameObject = this;
+            component.Transform = Transform;
+            return component;
         }
 
         public T? GetComponent<T>() where T : IComponent
@@ -24,7 +25,7 @@
             if (component != null) return (T) component;
             return default;
         }
-        
+
         public List<IComponent> GetAllComponents() => Components;
     }
 }

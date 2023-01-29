@@ -2,6 +2,6 @@
 {
     public interface IComponent
     {
-        GameObject GameObject { get; set; }
+        Transform Transform { get; set; }
     }
 }

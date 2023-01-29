@@ -10,8 +10,7 @@ namespace ShinGen
 
         private float mouseRotationY;
 
-        public GameObject GameObject { get; set; }
-
+        public Transform Transform { get; set; }
 
         public void OnMouseMove(IMouse mouse, Vector2 position)
         {
@@ -32,8 +31,8 @@ namespace ShinGen
                     var deltaX = position.X - lastPos;
                     lastPos = position.X;
                     mouseRotationY += deltaX * 10;
-                    var rotation = GameObject.Transform.Rotation;
-                    GameObject.Transform.Rotation = rotation with
+                    var rotation = Transform.Rotation;
+                    Transform.Rotation = rotation with
                     {
                         Y = mouseRotationY
                     };
@@ -45,5 +44,6 @@ namespace ShinGen
         {
             
         }
+
     }
 }

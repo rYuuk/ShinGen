@@ -7,7 +7,8 @@ namespace ShinGen
     {
         public AnimatedModel animatedModel;
 
-        public GameObject GameObject { get; set; }
+        public Transform Transform { get; set; }
+
 
         public void OnMouseMove(IMouse mouse, Vector2 position)
         {
@@ -24,5 +25,6 @@ namespace ShinGen
                 }
             }
         }
+
     }
 }
