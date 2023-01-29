@@ -20,7 +20,8 @@ A simple rendering engine for Windows, developed with the purpose of educating a
 - Fix skeleton animation [*implemented but doesn't works*]
 - Shadows
 - Entity Component System
-- Add vulkan support
+- Vulkan support
+- Scene graph
 - Documentation
 
 ## Usage
