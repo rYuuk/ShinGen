@@ -6,10 +6,8 @@ namespace ShinGen
     public class Shader : IDisposable
     {
         private readonly GL gl;
-        private readonly string vertexPath;
-        private readonly string fragmentPath;
 
-        private uint handle;
+        private readonly uint handle;
         private bool disposedValue;
 
         private Dictionary<string, int> uniformLocations;
@@ -17,8 +15,6 @@ namespace ShinGen
         public Shader(GL gl, string vertexPath, string fragmentPath)
         {
             this.gl = gl;
-            this.vertexPath = vertexPath;
-            this.fragmentPath = fragmentPath;
             uniformLocations = new Dictionary<string, int>();
 
             var vertex = LoadShader(ShaderType.VertexShader, vertexPath);

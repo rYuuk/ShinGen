@@ -21,9 +21,12 @@ struct Material {
 
 uniform Material material;
 
-// lights
-uniform vec3 lightPositions[4];
-uniform vec3 lightColors[4];
+struct Lights {
+    vec3 position;
+    vec3 color;
+};
+
+uniform Lights lights[4];
 
 uniform vec3 camPos;
 
@@ -131,11 +134,11 @@ void main()
     for (int i = 0; i < 4; i++)
     {
         // calculate per-light radiance
-        vec3 L = normalize(lightPositions[i] - WorldPos);
+        vec3 L = normalize(lights[i].position - WorldPos);
         vec3 H = normalize(V + L);
-        float distance = length(lightPositions[i] - WorldPos);
+        float distance = length(lights[i].position - WorldPos);
         float attenuation = 1.0 / (distance * distance);
-        vec3 radiance = lightColors[i] * attenuation;
+        vec3 radiance = lights[i].color * attenuation;
 
         // Cook-Torrance BRDF
         float NDF = DistributionGGX(N, H, roughness);

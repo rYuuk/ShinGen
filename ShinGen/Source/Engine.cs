@@ -18,29 +18,23 @@ namespace ShinGen
 
         private CubemapRenderer cubemapRenderer = null!;
 
-        private bool firstMove;
-        private float lastPos;
-
-        private readonly Vector3[] lightPositions =
+        private readonly Light[] lights =
         {
-            new Vector3(0.0f, 4.0f, 6.0f)
-        };
-
-        private readonly Vector3[] lightColors =
-        {
-            new Vector3(255.0f, 255.0f, 255.0f),
+            new Light
+            {
+                Position = new Vector3(0.0f, 4.0f, 6.0f),
+                Color = new Vector3(255.0f, 255.0f, 255.0f),
+            }
         };
 
         private bool isFocused = true;
 
-        private CancellationTokenSource ctx = null!;
+        private readonly List<GameObject> gameObjects;
+        private readonly List<GameObject> disposableGameObjects;
+        private readonly List<ICanvas> canvases;
 
-        private List<GameObject> gameObjects;
-        private List<GameObject> disposableGameObjects;
-        private List<ICanvas> canvases;
-
-        private ImGuiController imGui;
-        private IInputContext windowInput;
+        private ImGuiController imGui = null!;
+        private IInputContext windowInput = null!;
 
         public Engine()
         {
@@ -96,21 +90,16 @@ namespace ShinGen
 
             RenderHelper.LoadSettings();
 
-            // uiController = new UIController(gl, window, windowInput);
-            // uiController.DownloadButtonClicked += DownloadAvatarAsync;
             imGui = new ImGuiController(gl, window, windowInput);
 
-            for (var i = 0; i < windowInput.Mice.Count; i++)
+            foreach (var mouse in windowInput.Mice)
             {
-                windowInput.Mice[i].Cursor.CursorMode = CursorMode.Normal;
-                // windowInput.Mice[i].MouseMove += OnMouseMove;
-                windowInput.Mice[i].Scroll += OnMouseWheel;
+                mouse.Cursor.CursorMode = CursorMode.Normal;
+                mouse.Scroll += OnMouseWheel;
             }
 
-            windowInput.Keyboards[0].KeyUp += OnKeyUp;
-
             camera = new Camera(new Vector3(0, 1.6f, 3), window.Size.X / (float) window.Size.Y, 2f, 0.1f);
-            input = new Input(camera, windowInput.Keyboards[0], windowInput.Mice[0], window.Close);
+            input = new Input(camera, windowInput.Keyboards[0], window.Close);
 
             cubemapRenderer = new CubemapRenderer();
             cubemapRenderer.Load();
@@ -166,15 +155,12 @@ namespace ShinGen
             cubemapRenderer.Dispose();
         }
 
-        private bool doOnce = true;
-
         private void OnRender(double deltaTime)
         {
             RenderHelper.Clear();
 
             foreach (var gameObject in gameObjects.ToList())
             {
-                // windowInput.Mice[0].MouseMove += gameObject.OnMouseMove;
                 foreach (var component in gameObject.GetAllComponents())
                 {
                     if (component is IRenderer renderer)
@@ -183,13 +169,21 @@ namespace ShinGen
                         {
                             renderer.Load();
                         }
-                        renderer.SetLights(lightPositions, lightColors);
+                        renderer.SetLights(lights);
                         renderer.Render(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
                     }
 
-                    if (component is IInput input)
+                    if (component is IInput inputComponent)
                     {
-                        windowInput.Mice[0].MouseMove += input.OnMouseMove;
+                        foreach (var mouse in windowInput.Mice)
+                        {
+                            mouse.MouseMove += inputComponent.OnMouseMove;
+                        }
+
+                        foreach (var keyboard in windowInput.Keyboards)
+                        {
+                            keyboard.KeyUp += inputComponent.OnKeyUp;
+                        }
                     }
                 }
             }
@@ -209,19 +203,6 @@ namespace ShinGen
             cubemapRenderer.Draw(camera.GetViewMatrix(5), camera.GetProjectionMatrix());
             gl.DepthFunc(DepthFunction.Less);
 
-            if (doOnce)
-            {
-                doOnce = false;
-                // uiController.RestartStopwatch();
-                // avatarDownloadStatus = AvatarDownloadStatus.None;
-                // avatar = new AnimatedModel(DOWNLOADED_AVATAR_FILE_PATH);
-                // avatar.Load();
-                // avatar.SetupMesh();
-                // models.Add(avatar);
-                // uiController.AddTimedLog($"Avatar model loading completed");
-            }
-
-
             imGui.Update((float) deltaTime);
             foreach (var canvas in canvases)
             {
@@ -231,41 +212,6 @@ namespace ShinGen
 
             // draw in wireframe
             // gl.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-        }
-
-        // private void OnMouseMove(IMouse mouse, Vector2 position)
-        // {
-        //     if (position.X < window.Size.X / 2f)
-        //     {
-        //         return;
-        //     }
-        //
-        //     if (mouse.IsButtonPressed(MouseButton.Left))
-        //     {
-        //         if (firstMove)
-        //         {
-        //             lastPos = position.X;
-        //             firstMove = false;
-        //         }
-        //         else
-        //         {
-        //             var deltaX = position.X - lastPos;
-        //             lastPos = position.X;
-        //             mouseRotationY += deltaX * 10;
-        //         }
-        //     }
-        // }
-
-        private void OnKeyUp(IKeyboard arg1, Key arg2, int arg3)
-        {
-            // if (AnimatedModel.DEBUG_BONES && arg2 == Key.B)
-            // {
-            //     avatar.DebugBoneIndex++;
-            //     if (avatar.DebugBoneIndex > 66)
-            //     {
-            //         avatar.DebugBoneIndex = 0;
-            //     }
-            // }
         }
 
         private void OnUpdate(double time)

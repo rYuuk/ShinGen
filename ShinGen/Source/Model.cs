@@ -51,13 +51,13 @@ namespace ShinGen
             IsLoaded = true;
         }
 
-        public void Light(Vector3[] lightPositions, Vector3[] lightColors)
+        public void Light(Light[] lights)
         {
             Shader.Bind();
-            for (var i = 0; i < lightPositions.Length; i++)
+            for (var i = 0; i < lights.Length; i++)
             {
-                Shader.SetVector3("lightPositions[" + i + "]", lightPositions[i]);
-                Shader.SetVector3("lightColors[" + i + "]", lightColors[i]);
+                Shader.SetVector3("lights[" + i + "].position", lights[i].Position);
+                Shader.SetVector3("lights[" + i + "].color", lights[i].Color);
             }
         }
 

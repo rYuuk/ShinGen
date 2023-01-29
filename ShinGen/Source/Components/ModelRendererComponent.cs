@@ -10,8 +10,8 @@ namespace ShinGen
         public Model Model => model;
         public bool IsLoaded { get; private set; }
 
-        private Vector3[] lightPosiiton;
-        private Vector3[] ligthColor;
+        private Light[] lights;
+
 
         public ModelRendererComponent(string path)
         {
@@ -25,15 +25,14 @@ namespace ShinGen
 
         }
 
-        public void SetLights(Vector3[] lP, Vector3[] lC)
+        public void SetLights(Light[] sceneLights)
         {
-            lightPosiiton = lP;
-            ligthColor = lC;
+            lights = sceneLights;
         }
 
         public void Render(Matrix4x4 view, Matrix4x4 projection, Vector3 camPos)
         {
-            model.Light(lightPosiiton, ligthColor);
+            model.Light(lights);
             model.Draw(GameObject.Transform.ModelMatrix, view, projection, camPos);
         }
 

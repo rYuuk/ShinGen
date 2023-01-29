@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using Silk.NET.Input;
+﻿using Silk.NET.Input;
 
 namespace ShinGen
 {
@@ -7,19 +6,12 @@ namespace ShinGen
     {
         private readonly Camera camera;
         private readonly IKeyboard input;
-        private readonly IMouse mouse;
         private readonly Action closed;
 
-        // A boolean set to true to detect whether or not the mouse has been moved for the first time.
-        private bool firstMove;
-        // The last position of the mouse so we can calculate the mouse offset easily.
-        private Vector2 lastPos;
-
-        public Input(Camera camera, IKeyboard input, IMouse mouse, Action closed)
+        public Input(Camera camera, IKeyboard input, Action closed)
         {
             this.camera = camera;
             this.input = input;
-            this.mouse = mouse;
             this.closed = closed;
         }
 
@@ -27,7 +19,7 @@ namespace ShinGen
         {
             if (input.IsKeyPressed(Key.Escape))
             {
-                closed?.Invoke();
+                closed();
             }
 
             if (input.IsKeyPressed(Key.W))
@@ -59,23 +51,6 @@ namespace ShinGen
             if (input.IsKeyPressed(Key.ShiftRight))
             {
                 camera.Position -= camera.Up * camera.Speed * deltaTime;
-            }
-
-            if (firstMove)
-            {
-                // lastPos = new Vector2(mouse.Position.X, mouse.Position.Y);
-                // firstMove = false;
-            }
-            else
-            {
-                // var deltaX = mouse.Position.X - lastPos.X;
-                // var deltaY = mouse.Position.Y - lastPos.Y;
-                // lastPos = new Vector2(mouse.Position.X, mouse.Position.Y);
-                
-                // Apply the camera pitch and yaw (we clamp the pitch in the camera class)
-                // camera.Yaw += deltaX * camera.Sensitivity;
-                // Reversed since y-coordinates range from bottom to top
-                // camera.Pitch -= deltaY * camera.Sensitivity;
             }
         }
     }

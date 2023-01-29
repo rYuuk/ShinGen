@@ -40,5 +40,10 @@ namespace ShinGen
                 }
             }
         }
+
+        public void OnKeyUp(IKeyboard arg1, Key arg2, int arg3)
+        {
+            
+        }
     }
 }
