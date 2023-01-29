@@ -14,7 +14,7 @@ namespace ShinGen.Core
 
         private readonly List<Bone> bones;
 
-        public AnimationLoader(string path,IDictionary<string, BoneInfo> modelBoneInfoDict, int boneCount)
+        public AnimationLoader(string path, IDictionary<string, BoneInfo> modelBoneInfoDict, int boneCount)
         {
             var assimp = Assimp.GetApi();
             bones = new List<Bone>();
@@ -44,7 +44,7 @@ namespace ShinGen.Core
                 name = name.Substring("mixamorig_".Length);
             }
 
-            var boneAnimationNodeData = new BoneAnimationNodeData()
+            var boneAnimationNodeData = new BoneAnimationNodeData
             {
                 Name = name,
                 Transformation = node->MTransformation,
@@ -59,7 +59,7 @@ namespace ShinGen.Core
             return boneAnimationNodeData;
         }
 
-        private unsafe void ReadMissingBones(Silk.NET.Assimp.Animation* assimpAnimation, IDictionary<string, BoneInfo> modelBoneInfoDict, int boneCount)
+        private unsafe void ReadMissingBones(Animation* assimpAnimation, IDictionary<string, BoneInfo> modelBoneInfoDict, int boneCount)
         {
             var size = assimpAnimation->MNumChannels;
             var boneInfoDict = new Dictionary<string, BoneInfo>(modelBoneInfoDict);
@@ -107,7 +107,7 @@ namespace ShinGen.Core
             var rotations = new KeyRotation[rotationsCount];
             for (var i = 0; i < rotationsCount; i++)
             {
-                rotations[i] = new KeyRotation()
+                rotations[i] = new KeyRotation
                 {
                     TimeStamp = nodeAnim->MRotationKeys[i].MTime,
                     Rotation = nodeAnim->MRotationKeys[i].MValue

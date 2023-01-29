@@ -12,7 +12,7 @@ namespace ShinGen.Core.OpenGL
         public static void LoadSettings()
         {
             Clear();
-            
+
             // Enable depth testing so z-buffer can be checked for fragments and
             // only those which are in front be drawn.
             gl.Enable(EnableCap.DepthTest);

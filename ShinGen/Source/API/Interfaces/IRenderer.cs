@@ -7,7 +7,7 @@ namespace ShinGen
         public Vector3 Position;
         public Vector3 Color;
     }
-    
+
     public interface IRenderer : IDisposable
     {
         bool IsLoaded { get; }

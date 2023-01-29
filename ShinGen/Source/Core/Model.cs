@@ -6,16 +6,14 @@ namespace ShinGen.Core
     public class Model : IDisposable
     {
         private readonly string path;
-        private List<Mesh> meshes = null!;
+        private readonly Dictionary<Mesh, MeshRenderer> meshRendererMap;
 
-        public List<Mesh> Meshes => meshes;
+        public List<Mesh> Meshes { get; private set; } = null!;
+
         internal Dictionary<string, BoneInfo> BoneInfoDict = null!;
-        protected int BoneCounter;
-
-        public Matrix4x4 GlobalInverseTransformation;
         internal Shader Shader = null!;
 
-        private readonly Dictionary<Mesh, MeshRenderer> meshRendererMap;
+        protected int BoneCounter;
 
         public Model(string path)
         {
@@ -26,11 +24,9 @@ namespace ShinGen.Core
         public void Load()
         {
             var importer = new ModelImporter();
-            meshes = importer.LoadModel(path);
+            Meshes = importer.LoadModel(path);
             BoneInfoDict = importer.BoneInfoMap;
             BoneCounter = importer.BoneCount;
-
-            GlobalInverseTransformation = importer.GlobalInverseTransformation;
 
             Shader = RenderFactory.CreateShader(
                 "Source/Core/Shaders/shader.vert",
@@ -40,7 +36,7 @@ namespace ShinGen.Core
 
         private void SetupMesh()
         {
-            foreach (var mesh in meshes)
+            foreach (var mesh in Meshes)
             {
                 var meshRenderer = new MeshRenderer(mesh);
                 meshRenderer.SetupMesh();

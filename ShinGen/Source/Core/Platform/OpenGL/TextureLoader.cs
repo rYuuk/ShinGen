@@ -1,7 +1,6 @@
 ﻿using Silk.NET.OpenGL;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using TextureWrapMode = Silk.NET.OpenGL.TextureWrapMode;
 
 namespace ShinGen.Core.OpenGL
 {

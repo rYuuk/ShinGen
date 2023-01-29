@@ -11,8 +11,8 @@
             Downloaded
         }
 
-        public event Action<float>? InProgress; 
-        public event Action<string>? Completed; 
+        public event Action<float>? InProgress;
+        public event Action<string>? Completed;
 
         private AvatarDownloadStatus avatarDownloadStatus;
         private CancellationTokenSource ctx = null!;

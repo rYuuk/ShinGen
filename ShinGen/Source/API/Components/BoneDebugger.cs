@@ -7,7 +7,7 @@ namespace ShinGen
     // TODO Fix this component
     public class BoneDebugger : IComponent, IKeyboardInput
     {
-        private AnimatedModel animatedModel = null!;
+        private readonly AnimatedModel animatedModel = null!;
 
         public Transform Transform { get; set; } = null!;
 

@@ -59,7 +59,7 @@ namespace ShinGen.Core
                 M43 = 0,
                 M44 = 0
             };
-            
+
             shader.Bind();
             shader.SetMatrix4("view", viewWithoutTranslation);
             shader.SetMatrix4("projection", projection);

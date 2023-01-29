@@ -6,7 +6,7 @@
         /// while importing model,the animations are removed.
         public const bool ENABLE_ANIMATION = false;
         public const bool DEBUG_BONES = false;
-        
+
         private readonly Animator animator;
 
         public int DebugBoneIndex;
@@ -33,7 +33,7 @@
             {
                 Shader.SetInt("displayBoneIndex", DebugBoneIndex);
             }
-            
+
             Shader.SetInt("enableAnimation", ENABLE_ANIMATION ? 1 : 0);
             if (ENABLE_ANIMATION)
             {

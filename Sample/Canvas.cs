@@ -57,7 +57,7 @@ namespace ShinGen
         {
             log = lastLog + $"{logString} {progress * 100:F2}%%\n";
         }
-        
+
         public void StopProgress()
         {
             downloadButton = "Download";
@@ -100,7 +100,7 @@ namespace ShinGen
             {
                 Name = "Avatar Loader",
                 Pos = new Vector2(20, 20),
-                Size = new Vector2(900, 80),
+                Size = new Vector2(900, 80)
             };
 
             CreateWindow(downloadWindowData, () =>
@@ -122,7 +122,7 @@ namespace ShinGen
             {
                 Name = "Debug",
                 Pos = new Vector2(Window.Size.X - 520, 20),
-                Size = new Vector2(500, 300),
+                Size = new Vector2(500, 300)
             };
 
             CreateWindow(debugWindowData, () =>
@@ -158,7 +158,7 @@ namespace ShinGen
             {
                 Name = "Log",
                 Pos = new Vector2(20, Window.Size.Y - 320),
-                Size = new Vector2(900, 300),
+                Size = new Vector2(900, 300)
             };
 
             CreateWindow(logWindowData, () =>
@@ -167,6 +167,6 @@ namespace ShinGen
             });
         }
 
-        
+
     }
 }

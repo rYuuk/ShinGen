@@ -19,9 +19,9 @@ namespace ShinGen.Core.OpenGL
 
         public unsafe void AddBufferData(int size)
         {
-            gl.BufferData(bufferType, (uint)size, null, GLEnum.StaticDraw);
+            gl.BufferData(bufferType, (uint) size, null, GLEnum.StaticDraw);
         }
-        
+
         public unsafe void AddBufferData<TDataType>(Span<TDataType> data) where TDataType : unmanaged
         {
             fixed (void* dataPointer = data)

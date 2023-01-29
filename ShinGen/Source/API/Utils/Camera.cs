@@ -3,26 +3,19 @@ using ShinGen.Core;
 
 namespace ShinGen
 {
-    // TODO could have also managed the player input inside the camera class,
-    // TODO a lot of the properties could have been made into functions.
     public class Camera
     {
         // These vectors are directions pointing outwards from the camera to define how it is rotated.
         private Vector3 front = -Vector3.UnitZ;
 
-        private Vector3 up = Vector3.UnitY;
-
-        private Vector3 right = Vector3.UnitX;
-
         // Rotation around the X axis (radians)
         private float pitch;
 
-        // Rotation around the Y axis (radians),
         // Without this, it would be started rotated 90 degrees right.
         private float yaw = -MathHelper.PiOver2;
 
         // The field of view of the camera (radians)
-        private float fov = MathHelper.PiOver2/2;
+        private float fov = MathHelper.PiOver2 / 2;
 
         public readonly float Speed;
         public readonly float Sensitivity;
@@ -43,9 +36,9 @@ namespace ShinGen
 
         public Vector3 Front => front;
 
-        public Vector3 Up => up;
+        public Vector3 Up { get; private set; } = Vector3.UnitY;
 
-        public Vector3 Right => right;
+        public Vector3 Right { get; private set; } = Vector3.UnitX;
 
         // Convert from degrees to radians as soon as the property is set to improve performance.
         public float Pitch
@@ -86,7 +79,7 @@ namespace ShinGen
         // Get the view matrix using the LookAt function
         public Matrix4x4 GetViewMatrix(float value = 0.6f)
         {
-            return Matrix4x4.CreateLookAt(Position, Vector3.UnitY* value, up);
+            return Matrix4x4.CreateLookAt(Position, Vector3.UnitY * value, Up);
         }
 
         // Get the projection matrix using the CreatePerspectiveFieldOfView function.
@@ -109,8 +102,8 @@ namespace ShinGen
             // Calculate both the right and the up vector using cross product.
             // Note that this is calculating the right from the global up; this behaviour might
             // not be needed for all cameras so keep, like if we do not want a FPS camera.
-            right = Vector3.Normalize(Vector3.Cross(front, Vector3.UnitY));
-            up = Vector3.Normalize(Vector3.Cross(right, front));
+            Right = Vector3.Normalize(Vector3.Cross(front, Vector3.UnitY));
+            Up = Vector3.Normalize(Vector3.Cross(Right, front));
         }
     }
 }

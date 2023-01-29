@@ -25,7 +25,7 @@ namespace ShinGen
             new Light
             {
                 Position = new Vector3(0.0f, 4.0f, 6.0f),
-                Color = new Vector3(255.0f, 255.0f, 255.0f),
+                Color = new Vector3(255.0f, 255.0f, 255.0f)
             }
         };
 

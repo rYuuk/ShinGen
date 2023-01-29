@@ -5,7 +5,7 @@
         albedoMap,
         normalMap,
         metallicRoughnessMap,
-        emissiveMap,
+        emissiveMap
     }
 
     public struct Texture

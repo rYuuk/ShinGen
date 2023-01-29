@@ -58,7 +58,7 @@ namespace ShinGen.Core.OpenGL
             gl.GetAttribLocation(handle, attribName);
 
         public void SetInt(string name, int value) =>
-            gl.Uniform1(uniformLocations[name],  value);
+            gl.Uniform1(uniformLocations[name], value);
 
         public void SetFloat(string name, float value) =>
             gl.Uniform1(uniformLocations[name], value);

@@ -40,7 +40,7 @@ namespace ShinGen.Core
                 }
                 else
                 {
-                    var newBoneInfo = new BoneInfo()
+                    var newBoneInfo = new BoneInfo
                     {
                         ID = BoneCounter,
                         Offset = bone->MOffsetMatrix
