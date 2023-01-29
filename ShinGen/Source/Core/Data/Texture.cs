@@ -1,6 +1,6 @@
 ﻿namespace ShinGen.Core
 {
-    internal enum ShaderTextures
+    public enum ShaderTextures
     {
         albedoMap,
         normalMap,
@@ -8,7 +8,7 @@
         emissiveMap,
     }
 
-    internal struct Texture
+    public struct Texture
     {
         public uint ID;
         public ShaderTextures Type;

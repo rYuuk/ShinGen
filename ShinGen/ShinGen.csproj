@@ -7,7 +7,6 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <AssemblyName>ShinGen</AssemblyName>
         <RootNamespace>ShinGen</RootNamespace>
-        <OutputType>Exe</OutputType>
     </PropertyGroup>
 
     <ItemGroup>
@@ -24,6 +23,5 @@
 
     <ItemGroup>
         <None Include="Source/Core/Shaders/**" CopyToOutputDirectory="PreserveNewest" />
-        <None Include="Resources/**" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 </Project>

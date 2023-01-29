@@ -12,7 +12,7 @@ namespace ShinGen.Core.OpenGL
 
         private Dictionary<string, int> uniformLocations;
 
-        public Shader(GL gl, string vertexPath, string fragmentPath)
+        internal Shader(GL gl, string vertexPath, string fragmentPath)
         {
             this.gl = gl;
             uniformLocations = new Dictionary<string, int>();

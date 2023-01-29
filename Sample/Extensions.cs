@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace ShinGen
+﻿namespace ShinGen
 {
     public static class HttpClientExtensions
     {

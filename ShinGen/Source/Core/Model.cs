@@ -8,9 +8,9 @@ namespace ShinGen.Core
         private readonly string path;
         private List<Mesh> meshes = null!;
 
-        internal List<Mesh> Meshes => meshes;
+        public List<Mesh> Meshes => meshes;
         internal Dictionary<string, BoneInfo> BoneInfoDict = null!;
-        public int BoneCounter;
+        protected int BoneCounter;
 
         public Matrix4x4 GlobalInverseTransformation;
         internal Shader Shader = null!;

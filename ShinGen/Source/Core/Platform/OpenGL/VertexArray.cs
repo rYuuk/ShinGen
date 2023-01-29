@@ -7,7 +7,7 @@ namespace ShinGen.Core.OpenGL
         private readonly GL gl;
         private readonly uint handle;
 
-        public VertexArray(GL gl)
+        internal VertexArray(GL gl)
         {
             this.gl = gl;
             handle = gl.GenVertexArray();

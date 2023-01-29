@@ -33,7 +33,7 @@ namespace ShinGen.Core.OpenGL
     {
         public List<VertexBufferElement> Elements { get; }
 
-        public VertexBufferLayout()
+        internal VertexBufferLayout()
         {
             Elements = new List<VertexBufferElement>();
         }

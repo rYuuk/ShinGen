@@ -8,4 +8,11 @@
         <RootNamespace>Sample</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\ShinGen\ShinGen.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="Resources/**" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
 </Project>

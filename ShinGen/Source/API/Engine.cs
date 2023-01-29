@@ -148,6 +148,14 @@ namespace ShinGen
                 }
             }
 
+            foreach (var component in disposableGameObjects.SelectMany(gameObject => gameObject.GetAllComponents()))
+            {
+                if (component is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+            }
+
             cubemapRenderer.Dispose();
         }
 
@@ -185,14 +193,6 @@ namespace ShinGen
                         }
                         break;
                     }
-                }
-            }
-
-            foreach (var component in disposableGameObjects.SelectMany(gameObject => gameObject.GetAllComponents()))
-            {
-                if (component is IDisposable disposable)
-                {
-                    disposable.Dispose();
                 }
             }
 

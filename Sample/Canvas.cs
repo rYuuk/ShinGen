@@ -57,6 +57,11 @@ namespace ShinGen
         {
             log = lastLog + $"{logString} {progress * 100:F2}%%\n";
         }
+        
+        public void StopProgress()
+        {
+            downloadButton = "Download";
+        }
 
         public void RestartStopwatch()
         {
@@ -161,5 +166,7 @@ namespace ShinGen
                 ImGui.Text(log);
             });
         }
+
+        
     }
 }

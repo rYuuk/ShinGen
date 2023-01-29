@@ -2,14 +2,14 @@
 
 namespace ShinGen.Core
 {
-    internal readonly struct Mesh
+    public readonly struct Mesh
     {
         public readonly string Name;
         public readonly Matrix4x4 Transformation;
         public readonly Vector3[] Vertices;
         public readonly Vector3[] Normals;
         public readonly Vector2[] TexCoords;
-        public readonly BoneWeight[] BoneWeights;
+        internal readonly BoneWeight[] BoneWeights;
 
         public readonly uint[] Indices;
         public readonly Texture[] Textures;
@@ -19,7 +19,7 @@ namespace ShinGen.Core
         public readonly bool UseMetallicRoughnessMap;
         public readonly bool UseEmissiveMap;
 
-        public Mesh(string name, Vector3[] vertices, Vector3[] normals, Vector2[] texCoords, BoneWeight[]? boneWeights, uint[] indices,
+        internal Mesh(string name, Vector3[] vertices, Vector3[] normals, Vector2[] texCoords, BoneWeight[]? boneWeights, uint[] indices,
             Texture[] textures, Matrix4x4 transformation)
         {
             Name = name;

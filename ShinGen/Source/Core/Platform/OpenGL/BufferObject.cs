@@ -8,7 +8,7 @@ namespace ShinGen.Core.OpenGL
         private readonly GL gl;
         private readonly BufferTargetARB bufferType;
 
-        public BufferObject(GL glRender, BufferTargetARB bufferType)
+        internal BufferObject(GL glRender, BufferTargetARB bufferType)
         {
             gl = glRender;
             this.bufferType = bufferType;
