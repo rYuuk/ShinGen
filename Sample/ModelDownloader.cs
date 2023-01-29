@@ -2,7 +2,7 @@
 {
     public class ModelDownloader
     {
-        private const string DOWNLOADED_AVATAR_FILE_PATH = "Resources/Avatar/SingleMesh/DownloadedAvatar.glb";
+        private const string DOWNLOADED_AVATAR_FILE_PATH = "Resources/DownloadedAvatar.glb";
 
         private enum AvatarDownloadStatus
         {
@@ -11,7 +11,6 @@
             Downloaded
         }
 
-        public event Action? Cancelled; 
         public event Action<float>? InProgress; 
         public event Action<string>? Completed; 
 
@@ -22,7 +21,6 @@
         {
             if (avatarDownloadStatus == AvatarDownloadStatus.InProgress)
             {
-                Cancelled?.Invoke();
                 avatarDownloadStatus = AvatarDownloadStatus.None;
                 ctx.Cancel();
                 return;
