@@ -7,7 +7,7 @@ canvas.AddLog("Load complete");
 
 var room = new GameObject();
 var roomRendererComponent = room.AddComponent<ModelRendererComponent>();
-roomRendererComponent.SetPath("Resources/EpicRoom.glb");
+roomRendererComponent.SetPath("Resources/Room.glb");
 room.Transform.Scale = Vector3.One * 0.2f;
 room.Transform.Position = new Vector3(0.0f, 0, 0f);
 room.Transform.Rotation = new Vector3(0, -45, 0);
