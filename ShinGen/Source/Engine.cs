@@ -56,6 +56,26 @@ namespace ShinGen
             window.Run();
         }
 
+        public void AddGameObject(GameObject gameObject)
+        {
+            gameObjects.Add(gameObject);
+        }
+
+        public void DestroyGameObject(GameObject gameObject)
+        {
+            gameObjects.Remove(gameObject);
+            disposableGameObjects.Add(gameObject);
+
+        }
+
+        public T CreateUICanvas<T>() where T : ICanvas, new()
+        {
+            var canvas = new T();
+            canvas.Window = window;
+            canvases.Add(canvas);
+            return canvas;
+        }
+
         public void Dispose() =>
             UnRegisterEvents();
 
@@ -104,40 +124,14 @@ namespace ShinGen
             cubemapRenderer = new CubemapRenderer();
             cubemapRenderer.Load();
 
-            foreach (var gameObject in gameObjects)
+            foreach (var component in gameObjects.SelectMany(gameObject => gameObject.GetAllComponents()))
             {
-                foreach (var component in gameObject.GetAllComponents())
+                if (component is IRenderer renderer)
                 {
-                    if (component is IRenderer renderer)
-                    {
-                        renderer.Load();
-                    }
+                    renderer.Load();
                 }
-
             }
         }
-
-        public void AddGameObject(GameObject gameObject)
-        {
-            gameObjects.Add(gameObject);
-        }
-
-        public void DestroyGameObject(GameObject gameObject)
-        {
-            gameObjects.Remove(gameObject);
-            disposableGameObjects.Add(gameObject);
-
-        }
-
-        public T CreateUI<T>() where T : ICanvas, new()
-        {
-            var canvas = new T();
-            canvas.UIController = imGui;
-            canvas.WindowSize = new Vector2(window.Size.X, window.Size.Y);
-            canvases.Add(canvas);
-            return canvas;
-        }
-
 
         private void OnUnload()
         {
@@ -159,11 +153,11 @@ namespace ShinGen
         {
             RenderHelper.Clear();
 
-            foreach (var gameObject in gameObjects.ToList())
+            foreach (var component in gameObjects.ToList().SelectMany(gameObject => gameObject.GetAllComponents()))
             {
-                foreach (var component in gameObject.GetAllComponents())
+                switch (component)
                 {
-                    if (component is IRenderer renderer)
+                    case IRenderer renderer:
                     {
                         if (!renderer.IsLoaded)
                         {
@@ -171,31 +165,32 @@ namespace ShinGen
                         }
                         renderer.SetLights(lights);
                         renderer.Render(camera.GetViewMatrix(), camera.GetProjectionMatrix(), camera.Position);
+                        break;
                     }
-
-                    if (component is IInput inputComponent)
+                    case IMouseInput mouseInput:
                     {
                         foreach (var mouse in windowInput.Mice)
                         {
-                            mouse.MouseMove += inputComponent.OnMouseMove;
+                            mouse.MouseMove += mouseInput.OnMouseMove;
                         }
-
+                        break;
+                    }
+                    case IKeyboardInput keyboardInput:
+                    {
                         foreach (var keyboard in windowInput.Keyboards)
                         {
-                            keyboard.KeyUp += inputComponent.OnKeyUp;
+                            keyboard.KeyUp += keyboardInput.OnKeyUp;
                         }
+                        break;
                     }
                 }
             }
 
-            foreach (var gameObject in disposableGameObjects)
+            foreach (var component in disposableGameObjects.SelectMany(gameObject => gameObject.GetAllComponents()))
             {
-                foreach (var component in gameObject.GetAllComponents())
+                if (component is IDisposable disposable)
                 {
-                    if (component is IDisposable disposable)
-                    {
-                        disposable.Dispose();
-                    }
+                    disposable.Dispose();
                 }
             }
 

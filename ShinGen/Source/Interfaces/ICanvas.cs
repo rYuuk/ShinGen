@@ -1,12 +1,10 @@
-using System.Numerics;
-using Silk.NET.OpenGL.Extensions.ImGui;
+using Silk.NET.Windowing;
 
 namespace ShinGen
 {
     public interface ICanvas
     {
-        ImGuiController UIController { get; set; }
-        Vector2 WindowSize { get; set; }
+        IWindow Window { get; set; }
 
         void Render(double deltaTime);
     }

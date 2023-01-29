@@ -3,7 +3,7 @@ using Silk.NET.Input;
 
 namespace ShinGen
 {
-    public class RotateComponent : IComponent, IInput
+    public class RotateComponent : IComponent, IMouseInput
     {
         private float lastPos;
         private bool firstMove;
@@ -14,11 +14,6 @@ namespace ShinGen
 
         public void OnMouseMove(IMouse mouse, Vector2 position)
         {
-            // if (position.X < window.Size.X / 2f)
-            // {
-            // return;
-            // }
-
             if (mouse.IsButtonPressed(MouseButton.Left))
             {
                 if (firstMove)
@@ -39,11 +34,5 @@ namespace ShinGen
                 }
             }
         }
-
-        public void OnKeyUp(IKeyboard arg1, Key arg2, int arg3)
-        {
-            
-        }
-
     }
 }

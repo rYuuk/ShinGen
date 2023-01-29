@@ -3,11 +3,12 @@ using Silk.NET.Input;
 
 namespace ShinGen
 {
-    public class BoneDebugger : IComponent, IInput
+    // TODO Fix this component
+    public class BoneDebugger : IComponent, IKeyboardInput
     {
-        public AnimatedModel animatedModel;
+        private AnimatedModel animatedModel = null!;
 
-        public Transform Transform { get; set; }
+        public Transform Transform { get; set; } = null!;
 
 
         public void OnMouseMove(IMouse mouse, Vector2 position)

@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
 using ImGuiNET;
-using Silk.NET.OpenGL.Extensions.ImGui;
+using Silk.NET.Windowing;
 
 namespace ShinGen
 {
@@ -14,7 +14,6 @@ namespace ShinGen
             public Vector2 Size;
         }
 
-        private ImGuiController imgui;
         private readonly Stopwatch stopwatch;
 
         public Action<string> DownloadButtonClicked = null!;
@@ -25,26 +24,60 @@ namespace ShinGen
 
         private float ElapsedSeconds => stopwatch.ElapsedMilliseconds / 1000f;
 
-        public List<GameObject> RenderedModels;
-        public ImGuiController UIController { get; set; }
-        public Vector2 WindowSize { get; set; }
+        public IWindow Window { get; set; } = null!;
+        private string lastLog = null!;
+
+        private readonly List<ModelRendererComponent> renderedModels;
 
         public Canvas()
         {
             stopwatch = new Stopwatch();
             stopwatch.Start();
-            RenderedModels = new List<GameObject>();
+            renderedModels = new List<ModelRendererComponent>();
         }
 
-        // public void Begin(double deltaTime)
-        // {
-        //     imgui.Update((float) deltaTime);
-        // }
-        //
-        // public void End()
-        // {
-        //     imgui.Render();
-        // }
+        public void Render(double deltaTime)
+        {
+            RenderAvatarLoaderWindow();
+            RenderDebugWindow(deltaTime);
+            RenderLogWindow();
+        }
+
+        public void AddLog(string logString)
+        {
+            log += logString + "\n";
+        }
+
+        public void StartProgressLog()
+        {
+            lastLog = log;
+        }
+
+        public void AddProgressLog(string logString, float progress)
+        {
+            log = lastLog + $"{logString} {progress * 100:F2}%%\n";
+        }
+
+        public void RestartStopwatch()
+        {
+            stopwatch.Restart();
+        }
+
+        public void AddTimedLog(string logString)
+        {
+            log += $"{logString} : [{ElapsedSeconds:F2}s]\n";
+        }
+
+        public void LogModel(ModelRendererComponent rendererComponent)
+        {
+            renderedModels.Add(rendererComponent);
+        }
+
+        public void RemoveModelLogging(ModelRendererComponent rendererComponent)
+        {
+            renderedModels.Remove(rendererComponent);
+        }
+
 
         private void CreateWindow(WindowData windowData, Action onWindow)
         {
@@ -56,7 +89,7 @@ namespace ShinGen
             ImGui.End();
         }
 
-        public void RenderAvatarLoaderWindow()
+        private void RenderAvatarLoaderWindow()
         {
             var downloadWindowData = new WindowData
             {
@@ -78,12 +111,12 @@ namespace ShinGen
             });
         }
 
-        public void RenderDebugWindow(double deltaTime)
+        private void RenderDebugWindow(double deltaTime)
         {
             var debugWindowData = new WindowData
             {
                 Name = "Debug",
-                Pos = new Vector2(WindowSize.X - 520, 20),
+                Pos = new Vector2(Window.Size.X - 520, 20),
                 Size = new Vector2(500, 300),
             };
 
@@ -94,14 +127,9 @@ namespace ShinGen
                 ImGui.Text($"FPS: {1 / deltaTime:F0}");
                 ImGui.Separator();
 
-                for (var j = 0; j < RenderedModels.Count; j++)
+                for (var j = 0; j < renderedModels.Count; j++)
                 {
-                    var model = RenderedModels[j];
-                    var renderer = model.GetComponent<ModelRendererComponent>();
-                    if (renderer == null)
-                    {
-                        continue;
-                    }
+                    var renderer = renderedModels[j];
                     ImGui.Text($"Model: {j}\nMeshCount: {renderer.Model.Meshes.Count}");
 
                     foreach (var mesh in renderer.Model.Meshes)
@@ -119,12 +147,12 @@ namespace ShinGen
             });
         }
 
-        public void RenderLogWindow()
+        private void RenderLogWindow()
         {
             var logWindowData = new WindowData
             {
                 Name = "Log",
-                Pos = new Vector2(20, WindowSize.Y - 320),
+                Pos = new Vector2(20, Window.Size.Y - 320),
                 Size = new Vector2(900, 300),
             };
 
@@ -132,41 +160,6 @@ namespace ShinGen
             {
                 ImGui.Text(log);
             });
-        }
-
-        public void AddLog(string logString)
-        {
-            log += logString + "\n";
-        }
-
-        private string lastLog = null!;
-
-        public void StartProgressLog()
-        {
-            lastLog = log;
-        }
-
-        public void AddProgressLog(string logString, float progress)
-        {
-            log = lastLog + $"{logString} {progress * 100:F2}%%\n";
-        }
-
-
-        public void RestartStopwatch()
-        {
-            stopwatch.Restart();
-        }
-
-        public void AddTimedLog(string logString)
-        {
-            log += $"{logString} : [{ElapsedSeconds:F2}s]\n";
-        }
-
-        public void Render(double deltaTime)
-        {
-            RenderAvatarLoaderWindow();
-            RenderDebugWindow(deltaTime);
-            RenderLogWindow();
         }
     }
 }
