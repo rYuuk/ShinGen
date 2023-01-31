@@ -1,5 +1,4 @@
-﻿using ShinGen.Core.OpenGL;
-using Silk.NET.Assimp;
+﻿using Silk.NET.Assimp;
 using AssimpTexture = Silk.NET.Assimp.Texture;
 
 namespace ShinGen.Core
@@ -20,6 +19,7 @@ namespace ShinGen.Core
         public unsafe IEnumerable<Texture> ImportTextures(AssimpTexture** assimpTextures, string meshName, Material* material)
         {
             var textures = new List<Texture>();
+
             foreach (var shaderTexture in shaderTexturesMap)
             {
                 textures.AddRange(LoadMaterialTextures(meshName, assimpTextures, material, shaderTexture.Key, shaderTexture.Value));
@@ -50,19 +50,23 @@ namespace ShinGen.Core
                 var assimpTexture = assimpTextures[index];
                 var textureName = meshName + "_" + shaderTexture + "_" + assimpTexture->MFilename;
 
-                for (var j = 0; j < texturesLoaded.Count; j++)
+                foreach (var tex in texturesLoaded.Where(tex => tex.Name == textureName))
                 {
-                    if (texturesLoaded[j].Name != textureName) continue;
-                    textures.Add(texturesLoaded[j]);
+                    textures.Add(tex);
                     skip = true;
                     break;
                 }
-                if (skip) continue;
-                var texture = new Texture();
-                texture.ID = TextureLoader.LoadFromBytes(assimpTexture->PcData, assimpTexture->MWidth, assimpTexture->MHeight);
-                texture.Name = textureName;
-                texture.Type = shaderTexture;
 
+                if (skip) continue;
+                var texture = new Texture
+                {
+                    Name = textureName,
+                    Type = shaderTexture,
+                    TextureData = (byte*) assimpTexture->PcData,
+                    Width = assimpTexture->MWidth,
+                    Height = assimpTexture->MHeight
+                };
+                
                 texturesLoaded.Add(texture);
                 textures.Add(texture);
             }

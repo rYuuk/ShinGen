@@ -48,12 +48,12 @@ namespace ShinGen.Core.OpenGL
             return handle;
         }
 
-        public static unsafe uint LoadFromBytes(void* pixelData, uint width, uint height)
+        public static unsafe uint LoadFromBytes(byte* pixelData, uint width, uint height)
         {
             var handle = gl.GenTexture();
             gl.BindTexture(TextureTarget.Texture2D, handle);
 
-            var stream = new UnmanagedMemoryStream((byte*) pixelData, height == 0 ? width : width * height);
+            var stream = new UnmanagedMemoryStream(pixelData, height == 0 ? width : width * height);
             using var img = Image.Load<Rgba32>(Configuration.Default, stream);
 
             gl.TexImage2D(

@@ -10,8 +10,10 @@
 
     public struct Texture
     {
-        public uint ID;
         public ShaderTextures Type;
         public string Name;
+        public unsafe byte* TextureData;
+        public uint Height;
+        public uint Width;
     }
 }

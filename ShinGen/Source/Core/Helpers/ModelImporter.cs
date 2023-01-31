@@ -14,8 +14,6 @@ namespace ShinGen.Core
         public Dictionary<string, BoneInfo> BoneInfoMap => boneWeightProcessor.BoneInfoMap;
         public int BoneCount => boneWeightProcessor.BoneCounter;
 
-        public Matrix4x4 GlobalInverseTransformation;
-
         private List<Mesh> Meshes { get; } = new List<Mesh>();
 
         public ModelImporter()
@@ -31,7 +29,8 @@ namespace ShinGen.Core
             {
                 var scene = assimp.ImportFile(path, (uint) (
                     PostProcessSteps.Triangulate |
-                    PostProcessSteps.FlipUVs
+                    PostProcessSteps.FlipUVs |
+                    PostProcessSteps.ImproveCacheLocality
                 ));
 
                 if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
@@ -40,7 +39,6 @@ namespace ShinGen.Core
                     throw new Exception(error);
                 }
 
-                // Matrix4x4.Invert(scene->MRootNode->MTransformation, out GlobalInverseTransformation);
                 ProcessNode(scene->MRootNode, scene, Matrix4x4.Identity);
             }
 
@@ -49,6 +47,7 @@ namespace ShinGen.Core
 
         private unsafe void ProcessNode(Node* node, Scene* scene, Matrix4x4 parentTransformation)
         {
+
             var globalTransformation = node->MTransformation * parentTransformation;
 
             for (var i = 0; i < node->MNumMeshes; i++)
@@ -90,16 +89,19 @@ namespace ShinGen.Core
 
         private unsafe (Vector3[], Vector3[], Vector2[]) ProcessVertices(AssimpMesh* mesh)
         {
-            var vertices = new List<Vector3>();
-            var normals = new List<Vector3>();
-            var texCoords = new List<Vector2>();
+            var vertexCount = mesh->MNumVertices;
+
+            var vertices = new Vector3[vertexCount];
+            var normals = new Vector3[vertexCount];
+            var texCoords = new Vector2[vertexCount];
+
             for (var i = 0; i < mesh->MNumVertices; i++)
             {
                 var vertex = new Vector3();
                 vertex.X = mesh->MVertices[i].X;
                 vertex.Y = mesh->MVertices[i].Y;
                 vertex.Z = mesh->MVertices[i].Z;
-                vertices.Add(vertex);
+                vertices[i] = vertex;
 
                 if (mesh->MNormals != null)
                 {
@@ -107,7 +109,7 @@ namespace ShinGen.Core
                     normal.X = mesh->MNormals[i].X;
                     normal.Y = mesh->MNormals[i].Y;
                     normal.Z = mesh->MNormals[i].Z;
-                    normals.Add(normal);
+                    normals[i] = normal;
                 }
 
                 if (mesh->MTextureCoords[0] != null)
@@ -117,10 +119,10 @@ namespace ShinGen.Core
                         X = mesh->MTextureCoords[0][i].X,
                         Y = mesh->MTextureCoords[0][i].Y
                     };
-                    texCoords.Add(texCoord);
+                    texCoords[i] = texCoord;
                 }
                 else
-                    texCoords.Add(Vector2.Zero);
+                    texCoords[i] = Vector2.Zero;
             }
 
             return (vertices.ToArray(), normals.ToArray(), texCoords.ToArray());

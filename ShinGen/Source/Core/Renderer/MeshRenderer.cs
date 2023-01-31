@@ -11,6 +11,8 @@ namespace ShinGen.Core
         private BufferObject vertexBufferObject = null!;
         private BufferObject elementBufferObject = null!;
 
+        private Dictionary<Texture, uint> textureMap = null!;
+
         public MeshRenderer(Mesh mesh)
         {
             this.mesh = mesh;
@@ -59,6 +61,15 @@ namespace ShinGen.Core
 
             vertexArray.AddBufferLayout(layout);
             vertexArray.UnLoad();
+
+            textureMap = new Dictionary<Texture, uint>();
+            foreach (var texture in mesh.Textures)
+            {
+                unsafe
+                {
+                    textureMap.Add(texture, TextureLoader.LoadFromBytes(texture.TextureData, texture.Width, texture.Height));
+                }
+            }
         }
 
         public void Draw(Shader shader)
@@ -71,7 +82,7 @@ namespace ShinGen.Core
             {
                 var name = mesh.Textures[i].Type;
                 shader.SetInt($"material.{name}", i);
-                TextureLoader.LoadSlot(mesh.Textures[i].ID, i);
+                TextureLoader.LoadSlot(textureMap[mesh.Textures[i]], i);
             }
 
             // Draw
@@ -87,7 +98,7 @@ namespace ShinGen.Core
             elementBufferObject.Dispose();
             for (var i = 0; i < mesh.Textures.Length; i++)
             {
-                TextureLoader.Dispose(mesh.Textures[i].ID);
+                TextureLoader.Dispose(textureMap[mesh.Textures[i]]);
             }
             GC.SuppressFinalize(this);
         }
