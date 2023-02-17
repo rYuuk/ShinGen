@@ -1,10 +1,12 @@
-# ShinGen Rendering Engine 
+# ShinGen Rendering Engine
 <img src="https://user-images.githubusercontent.com/1121080/215097298-04cefedf-b73c-480f-8453-ecff7cd916d9.png" 
         alt="Picture" 
         width="500" 
         height="500" 
         style="display: block; margin: 0 auto" />
-***        
+***
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/ryuuk/shingen)](https://github.com/rYuuk/ShinGen/releases/latest)
+
 A simple rendering engine for Windows, developed with the purpose of educating and demystifying low-level rendering techniques. Leveraging the power of OpenGL bindings from [Silk.Net](https://github.com/dotnet/Silk.NET/) and the widely supported [glTF](https://www.khronos.org/gltf/) file format, this engine offers a comprehensive and hands-on approach to understanding the inner workings of 3D graphics programming.
 
 - Utilizes Silk.Net for seamless integration of Windows and OpenGL rendering.
